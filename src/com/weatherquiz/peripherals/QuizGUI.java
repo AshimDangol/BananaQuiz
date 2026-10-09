@@ -4,7 +4,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.image.BufferedImage;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -32,6 +34,8 @@ public class QuizGUI extends JFrame implements ActionListener {
 	JButton btnB = null;
 	JButton btnOver = null;
 	JButton btnUnder = null;
+	JLabel picLabel = null;
+	JButton[] numBtns = new JButton[10];
 	JComboBox<String> modeBox = null;
 	Timer countTimer = null;
 	int left = 15;
@@ -39,7 +43,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 	public QuizGUI(String player) {
 		super("Weather Quiz - " + player);
 		quiz = new QuizEngine(player);
-		setSize(560, 380);
+		setSize(700, 650);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		JPanel panel = new JPanel();
 
@@ -49,7 +53,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		timerLabel = new JLabel("15s");
 		panel.add(timerLabel);
 
-		String[] modes = { "Which hotter?", "Over / Under 12C" };
+		String[] modes = { "Which hotter?", "Over / Under 12C", "Banana puzzle" };
 		modeBox = new JComboBox<String>(modes);
 		panel.add(modeBox);
 		modeBox.addItemListener(new ItemListener() {
@@ -92,6 +96,16 @@ public class QuizGUI extends JFrame implements ActionListener {
 		info.setEditable(false);
 		panel.add(new JScrollPane(info));
 
+		picLabel = new JLabel();
+		panel.add(new JScrollPane(picLabel));
+
+		for (int i = 0; i < 10; i++) {
+			numBtns[i] = new JButton(String.valueOf(i));
+			numBtns[i].setActionCommand("num" + i);
+			numBtns[i].addActionListener(this);
+			panel.add(numBtns[i]);
+		}
+
 		getContentPane().add(panel);
 
 		countTimer = new Timer(1000, new ActionListener() {
@@ -99,8 +113,14 @@ public class QuizGUI extends JFrame implements ActionListener {
 				left--;
 				timerLabel.setText(left + "s");
 				if (left <= 0) {
-					info.setText("time up! was " + tempsText());
-					quiz.checkAnswer(-1);
+					String mode = (String) modeBox.getSelectedItem();
+					if (mode.startsWith("Banana")) {
+						info.setText("time up! answer was " + quiz.bananaSolution);
+						quiz.checkBanana(-1);
+					} else {
+						info.setText("time up! was " + tempsText());
+						quiz.checkAnswer(-1);
+					}
 					updateScore();
 					newQuestionDelayed();
 				}
@@ -121,12 +141,43 @@ public class QuizGUI extends JFrame implements ActionListener {
 				+ "  score: " + quiz.getScore() + " tries: " + quiz.getTries());
 	}
 
+	void setNumEnabled(boolean on) {
+		for (int i = 0; i < 10; i++) {
+			numBtns[i].setEnabled(on);
+		}
+	}
+
 	void newQuestion() {
+		String mode = (String) modeBox.getSelectedItem();
+		if (mode.startsWith("Banana")) {
+			quiz.nextBanana();
+			left = 20;
+			timerLabel.setText("20s");
+			countTimer.restart();
+			question.setText("Banana puzzle: what is the missing number?"
+					+ (quiz.bananaOffline ? " (offline)" : " (live)"));
+			BufferedImage img = quiz.getBananaImage();
+			if (img != null) {
+				picLabel.setIcon(new ImageIcon(img));
+				picLabel.setText("");
+			} else {
+				picLabel.setIcon(null);
+				picLabel.setText("no image");
+			}
+			btnA.setEnabled(false);
+			btnB.setEnabled(false);
+			btnOver.setEnabled(false);
+			btnUnder.setEnabled(false);
+			setNumEnabled(true);
+			info.setText("pick 0-9...");
+			return;
+		}
 		quiz.nextQuestion();
 		left = 15;
 		timerLabel.setText("15s");
 		countTimer.restart();
-		String mode = (String) modeBox.getSelectedItem();
+		picLabel.setIcon(null);
+		picLabel.setText("");
 		if (mode.startsWith("Which")) {
 			question.setText("Which is hotter: " + quiz.cityA.name + " or " + quiz.cityB.name + "?");
 			btnA.setText(quiz.cityA.name);
@@ -135,12 +186,14 @@ public class QuizGUI extends JFrame implements ActionListener {
 			btnB.setEnabled(true);
 			btnOver.setEnabled(false);
 			btnUnder.setEnabled(false);
+			setNumEnabled(false);
 		} else {
 			question.setText("Is " + quiz.cityA.name + " over or under 12C?");
 			btnA.setEnabled(false);
 			btnB.setEnabled(false);
 			btnOver.setEnabled(true);
 			btnUnder.setEnabled(true);
+			setNumEnabled(false);
 		}
 		info.setText("pick an answer..." + (quiz.wasOffline() ? " (offline data)" : ""));
 	}
@@ -176,6 +229,17 @@ public class QuizGUI extends JFrame implements ActionListener {
 			ok = quiz.checkOverUnder(quiz.cityA.name, 12.0, true);
 		} else if (cmd.equals("under")) {
 			ok = quiz.checkOverUnder(quiz.cityA.name, 12.0, false);
+		} else if (cmd.startsWith("num")) {
+			int guess = Integer.parseInt(cmd.substring(3));
+			ok = quiz.checkBanana(guess);
+			if (ok) {
+				info.setText("right! answer was " + quiz.bananaSolution);
+			} else {
+				info.setText("wrong. answer was " + quiz.bananaSolution);
+			}
+			updateScore();
+			newQuestionDelayed();
+			return;
 		}
 		if (ok) {
 			info.setText("right! " + tempsText());

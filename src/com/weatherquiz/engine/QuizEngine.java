@@ -8,12 +8,16 @@ import com.weatherquiz.engine.WeatherServer.City;
 public class QuizEngine {
 
 	WeatherServer server = new WeatherServer();
+	BananaFetch banana = new BananaFetch();
 	Random rnd = new Random();
 
 	public City cityA = null;
 	public City cityB = null;
 	public double tempA = 0;
 	public double tempB = 0;
+
+	public int bananaSolution = -1;
+	public boolean bananaOffline = false;
 
 	public int score = 0;
 	int tries = 0;
@@ -62,6 +66,28 @@ public class QuizEngine {
 		}
 		boolean isOver = t > line;
 		if (isOver == sayOver) {
+			score++;
+			return true;
+		}
+		return false;
+	}
+
+	public boolean nextBanana() {
+		boolean ok = banana.next();
+		if (ok) {
+			bananaSolution = banana.solution;
+			bananaOffline = banana.offline;
+		}
+		return ok;
+	}
+
+	public java.awt.image.BufferedImage getBananaImage() {
+		return banana.image;
+	}
+
+	public boolean checkBanana(int guess) {
+		tries++;
+		if (guess == bananaSolution) {
 			score++;
 			return true;
 		}
