@@ -32,7 +32,7 @@ public class WeatherServer {
 	boolean lastWasOffline = false;
 
 	// canned temps if wifi/api down, so demo still runs
-	double[] fallbackTemps = { 11.5, 10.0, 13.0, 9.5, 12.0 };
+	double[] fallbackTemps = { 11.5, 10.0, 13.0, 9.5, 12.0, 11.0, 12.5, 9.0, 10.5, 8.5, 11.8, 10.2 };
 
 	public WeatherServer() {
 		cities.add(new City("Luton", 51.8787, -0.42));
@@ -40,6 +40,13 @@ public class WeatherServer {
 		cities.add(new City("London", 51.5074, -0.1278));
 		cities.add(new City("Manchester", 53.4808, -2.2426));
 		cities.add(new City("Bedford", 52.1364, -0.4609));
+		cities.add(new City("Birmingham", 52.4862, -1.8904));
+		cities.add(new City("Bristol", 51.4545, -2.5879));
+		cities.add(new City("Glasgow", 55.8642, -4.2518));
+		cities.add(new City("Cardiff", 51.4816, -3.1791));
+		cities.add(new City("Newcastle", 54.9783, -1.6178));
+		cities.add(new City("Liverpool", 53.4084, -2.9916));
+		cities.add(new City("Edinburgh", 55.9533, -3.1883));
 	}
 
 	public List<City> getCities() {
