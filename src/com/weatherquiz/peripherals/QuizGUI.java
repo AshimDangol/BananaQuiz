@@ -25,7 +25,9 @@ import javax.swing.JTextArea;
 import javax.swing.Timer;
 
 import com.perisic.tomato.peripherals.LoginData;
+import com.weatherquiz.engine.Board;
 import com.weatherquiz.engine.QuizEngine;
+import com.weatherquiz.engine.Settings;
 
 // main window for the weather quiz
 // button + dropdown + timer events all in here
@@ -47,11 +49,14 @@ public class QuizGUI extends JFrame implements ActionListener {
 	JButton[] numBtns = new JButton[10];
 	JComboBox<String> modeBox = null;
 	Timer countTimer = null;
+	Settings opts = null;
 	int left = 15;
 
 	public QuizGUI(String player) {
 		super("Weather Quiz - " + player);
 		quiz = new QuizEngine(player);
+		opts = new Settings(player);
+		left = opts.seconds;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(new BorderLayout(8, 8));
 
@@ -62,6 +67,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 
 		String[] modes = { "Which hotter?", "Over / Under 12C", "Banana puzzle" };
 		modeBox = new JComboBox<String>(modes);
+		modeBox.setSelectedItem(opts.mode);
 		modeBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -78,10 +84,20 @@ public class QuizGUI extends JFrame implements ActionListener {
 		skip.setActionCommand("skip");
 		skip.addActionListener(this);
 
+		JButton save = new JButton("save score");
+		save.setActionCommand("save");
+		save.addActionListener(this);
+
+		JButton menu = new JButton("menu");
+		menu.setActionCommand("menu");
+		menu.addActionListener(this);
+
 		top.add(scoreLabel);
 		top.add(timerLabel);
 		top.add(modeBox);
 		top.add(skip);
+		top.add(save);
+		top.add(menu);
 		top.add(logout);
 		add(top, BorderLayout.NORTH);
 
@@ -177,9 +193,12 @@ public class QuizGUI extends JFrame implements ActionListener {
 	}
 
 	String tempsText() {
+		String tag = "";
+		if (opts.showOffline) {
+			tag = quiz.wasOffline() ? " (offline)" : " (live)";
+		}
 		return quiz.cityA.name + " " + quiz.tempA + "C vs "
-				+ quiz.cityB.name + " " + quiz.tempB + "C"
-				+ (quiz.wasOffline() ? " (offline)" : " (live)");
+				+ quiz.cityB.name + " " + quiz.tempB + "C" + tag;
 	}
 
 	void updateScore() {
@@ -210,8 +229,8 @@ public class QuizGUI extends JFrame implements ActionListener {
 			return;
 		}
 		quiz.nextQuestion();
-		left = 15;
-		timerLabel.setText("15s");
+		left = opts.seconds;
+		timerLabel.setText(left + "s");
 		countTimer.restart();
 		picLabel.setIcon(null);
 		picLabel.setText("");
@@ -251,6 +270,19 @@ public class QuizGUI extends JFrame implements ActionListener {
 		}
 		if (cmd.equals("skip")) {
 			newQuestion();
+			return;
+		}
+		if (cmd.equals("menu")) {
+			countTimer.stop();
+			MenuGUI m = new MenuGUI(quiz.getPlayer());
+			m.setVisible(true);
+			dispose();
+			return;
+		}
+		if (cmd.equals("save")) {
+			Board.save(quiz.getPlayer(), quiz.getScore(), quiz.getTries(),
+					(String) modeBox.getSelectedItem());
+			info.setText("saved! " + tempsText());
 			return;
 		}
 		boolean ok = false;

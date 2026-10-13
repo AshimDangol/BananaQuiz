@@ -64,8 +64,8 @@ public class QuizLoginGUI extends JFrame {
 	}
 
 	void openQuiz(String user) {
-		QuizGUI g = new QuizGUI(user);
-		g.setVisible(true);
+		MenuGUI m = new MenuGUI(user);
+		m.setVisible(true);
 		dispose();
 	}
 
