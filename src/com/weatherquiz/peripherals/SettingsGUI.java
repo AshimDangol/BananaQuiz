@@ -33,7 +33,7 @@ public class SettingsGUI extends JFrame {
 		JComboBox<Integer> secBox = new JComboBox<Integer>(secs);
 		secBox.setSelectedItem(s.seconds);
 
-		String[] modes = { "Which hotter?", "Over / Under 12C", "Banana puzzle" };
+		String[] modes = { "Which hotter?", "Over / Under", "Banana puzzle" };
 		JComboBox<String> modeBox = new JComboBox<String>(modes);
 		modeBox.setSelectedItem(s.mode);
 

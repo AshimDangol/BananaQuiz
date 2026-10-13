@@ -65,7 +65,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		timerLabel = new JLabel("15s");
 		timerLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
 
-		String[] modes = { "Which hotter?", "Over / Under 12C", "Banana puzzle" };
+		String[] modes = { "Which hotter?", "Over / Under", "Banana puzzle" };
 		modeBox = new JComboBox<String>(modes);
 		modeBox.setSelectedItem(opts.mode);
 		modeBox.addItemListener(new ItemListener() {
@@ -161,11 +161,12 @@ public class QuizGUI extends JFrame implements ActionListener {
 					String mode = (String) modeBox.getSelectedItem();
 					if (mode.startsWith("Banana")) {
 						info.setText("time up! answer was " + quiz.bananaSolution);
-						quiz.checkBanana(-1);
+					} else if (mode.startsWith("Over")) {
+						info.setText("time up! " + quiz.cityA.name + " was " + quiz.tempA + "C");
 					} else {
 						info.setText("time up! was " + tempsText());
-						quiz.checkAnswer(-1);
 					}
+					quiz.miss();
 					updateScore();
 					newQuestionDelayed();
 				}
@@ -240,7 +241,9 @@ public class QuizGUI extends JFrame implements ActionListener {
 			btnB.setText(quiz.cityB.name);
 			showCard("hotter");
 		} else {
-			question.setText("Is " + quiz.cityA.name + " over or under 12C?");
+			question.setText("Is " + quiz.cityA.name + " over or under " + quiz.overLine + "C?");
+			btnOver.setText("Over " + quiz.overLine + "C");
+			btnUnder.setText("Under " + quiz.overLine + "C");
 			showCard("over");
 		}
 		info.setText("pick an answer..." + (quiz.wasOffline() ? " (offline data)" : ""));
@@ -291,9 +294,9 @@ public class QuizGUI extends JFrame implements ActionListener {
 		} else if (cmd.equals("B")) {
 			ok = quiz.checkAnswer(1);
 		} else if (cmd.equals("over")) {
-			ok = quiz.checkOverUnder(quiz.cityA.name, 12.0, true);
+			ok = quiz.checkOverUnder(quiz.cityA.name, quiz.overLine, true);
 		} else if (cmd.equals("under")) {
-			ok = quiz.checkOverUnder(quiz.cityA.name, 12.0, false);
+			ok = quiz.checkOverUnder(quiz.cityA.name, quiz.overLine, false);
 		} else if (cmd.startsWith("num")) {
 			int guess = Integer.parseInt(cmd.substring(3));
 			ok = quiz.checkBanana(guess);

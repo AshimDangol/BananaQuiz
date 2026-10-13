@@ -19,6 +19,8 @@ public class QuizEngine {
 	public int bananaSolution = -1;
 	public boolean bananaOffline = false;
 
+	public double overLine = 12.0;
+
 	public int score = 0;
 	int tries = 0;
 	String player = null;
@@ -42,6 +44,8 @@ public class QuizEngine {
 		if (Math.abs(tempA - tempB) < 0.2) {
 			tempB += 1.0;
 		}
+		// random line 8-18C so over/under stays 50/50 all year
+		overLine = 8 + rnd.nextInt(21) * 0.5;
 	}
 
 	// choice 0 = A hotter, 1 = B hotter
@@ -92,6 +96,11 @@ public class QuizEngine {
 			return true;
 		}
 		return false;
+	}
+
+	// timeout counts as a miss with no point
+	public void miss() {
+		tries++;
 	}
 
 	public String getPlayer() {
