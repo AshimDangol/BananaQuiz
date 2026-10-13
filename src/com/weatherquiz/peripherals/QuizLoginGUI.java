@@ -1,11 +1,15 @@
 package com.weatherquiz.peripherals;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -19,12 +23,11 @@ public class QuizLoginGUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	JButton blogin = new JButton("Login");
-	JButton bsignup = new JButton("Sign up");
-	JCheckBox remember = new JCheckBox("remember me", true);
-	JPanel panel = new JPanel();
 	JTextField txuser = new JTextField(15);
 	JPasswordField pass = new JPasswordField(15);
+	JCheckBox remember = new JCheckBox("remember me", true);
+	JButton blogin = new JButton("Login");
+	JButton bsignup = new JButton("Sign up");
 
 	LoginData ldata = new LoginData();
 
@@ -35,24 +38,39 @@ public class QuizLoginGUI extends JFrame {
 
 	public QuizLoginGUI() {
 		super("Weather Quiz Login");
-		setSize(300, 250);
-		setLocation(500, 280);
-		panel.setLayout(null);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		txuser.setBounds(70, 30, 150, 20);
-		pass.setBounds(70, 65, 150, 20);
-		blogin.setBounds(40, 100, 80, 20);
-		bsignup.setBounds(140, 100, 90, 20);
-		remember.setBounds(70, 130, 150, 20);
+		JPanel panel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(6, 6, 6, 6);
+		c.fill = GridBagConstraints.HORIZONTAL;
 
-		panel.add(blogin);
-		panel.add(bsignup);
-		panel.add(txuser);
-		panel.add(pass);
-		panel.add(remember);
+		c.gridx = 0;
+		c.gridy = 0;
+		panel.add(new JLabel("Username:"), c);
+		c.gridx = 1;
+		panel.add(txuser, c);
+
+		c.gridx = 0;
+		c.gridy = 1;
+		panel.add(new JLabel("Password:"), c);
+		c.gridx = 1;
+		panel.add(pass, c);
+
+		c.gridx = 0;
+		c.gridy = 2;
+		c.gridwidth = 2;
+		panel.add(remember, c);
+
+		JPanel btns = new JPanel();
+		btns.add(blogin);
+		btns.add(bsignup);
+		c.gridy = 3;
+		panel.add(btns, c);
 
 		getContentPane().add(panel);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		pack();
+		setLocationRelativeTo(null);
 		setVisible(true);
 
 		String saved = ldata.checkSession();
@@ -106,6 +124,12 @@ public class QuizLoginGUI extends JFrame {
 				} catch (Exception e) {
 					JOptionPane.showMessageDialog(null, "error making account");
 				}
+			}
+		});
+		// enter key logs in too
+		pass.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				blogin.doClick();
 			}
 		});
 	}
