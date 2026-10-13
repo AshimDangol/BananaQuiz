@@ -22,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingWorker;
 import javax.swing.Timer;
 
 import com.perisic.tomato.peripherals.LoginData;
@@ -51,6 +52,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 	Timer countTimer = null;
 	Settings opts = null;
 	int left = 15;
+	int loadToken = 0;
 
 	public QuizGUI(String player) {
 		super("Weather Quiz - " + player);
@@ -207,11 +209,47 @@ public class QuizGUI extends JFrame implements ActionListener {
 				+ "  score: " + quiz.getScore() + " tries: " + quiz.getTries());
 	}
 
+	void allButtonsOff() {
+		btnA.setEnabled(false);
+		btnB.setEnabled(false);
+		btnOver.setEnabled(false);
+		btnUnder.setEnabled(false);
+		for (int i = 0; i < 10; i++) {
+			numBtns[i].setEnabled(false);
+		}
+	}
+
 	void newQuestion() {
-		String mode = (String) modeBox.getSelectedItem();
+		final int myLoad = ++loadToken;
+		final String mode = (String) modeBox.getSelectedItem();
+		countTimer.stop();
 		timerLabel.setForeground(Color.BLACK);
+		allButtonsOff();
+		question.setText("loading...");
+		info.setText("fetching, wait...");
+		// fetch off the button thread so the window never freezes,
+		// done() runs back on the button thread to touch labels
+		new SwingWorker<Void, Void>() {
+			protected Void doInBackground() {
+				if (mode.startsWith("Banana")) {
+					quiz.nextBanana();
+				} else {
+					quiz.nextQuestion();
+				}
+				return null;
+			}
+
+			protected void done() {
+				if (myLoad != loadToken) {
+					return;
+				}
+				showLoaded(mode);
+			}
+		}.execute();
+	}
+
+	void showLoaded(String mode) {
 		if (mode.startsWith("Banana")) {
-			quiz.nextBanana();
 			left = 20;
 			timerLabel.setText("20s");
 			countTimer.restart();
@@ -226,10 +264,12 @@ public class QuizGUI extends JFrame implements ActionListener {
 				picLabel.setText("no image, check net");
 			}
 			showCard("banana");
+			for (int i = 0; i < 10; i++) {
+				numBtns[i].setEnabled(true);
+			}
 			info.setText("pick 0-9...");
 			return;
 		}
-		quiz.nextQuestion();
 		left = opts.seconds;
 		timerLabel.setText(left + "s");
 		countTimer.restart();
@@ -240,11 +280,15 @@ public class QuizGUI extends JFrame implements ActionListener {
 			btnA.setText(quiz.cityA.name);
 			btnB.setText(quiz.cityB.name);
 			showCard("hotter");
+			btnA.setEnabled(true);
+			btnB.setEnabled(true);
 		} else {
 			question.setText("Is " + quiz.cityA.name + " over or under " + quiz.overLine + "C?");
 			btnOver.setText("Over " + quiz.overLine + "C");
 			btnUnder.setText("Under " + quiz.overLine + "C");
 			showCard("over");
+			btnOver.setEnabled(true);
+			btnUnder.setEnabled(true);
 		}
 		info.setText("pick an answer..." + (quiz.wasOffline() ? " (offline data)" : ""));
 	}

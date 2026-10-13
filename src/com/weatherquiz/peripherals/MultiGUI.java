@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingWorker;
 import javax.swing.Timer;
 
 import com.weatherquiz.engine.Board;
@@ -116,17 +117,34 @@ public class MultiGUI extends JFrame implements ActionListener {
 			btnB.setEnabled(false);
 			return;
 		}
-		game.quiz.nextQuestion();
-		left = 15;
-		timerLabel.setText(left + "s");
-		timer.restart();
+		final int myRound = game.round;
+		final boolean myTurn = game.p1turn;
+		btnA.setEnabled(false);
+		btnB.setEnabled(false);
+		question.setText("loading...");
+		info.setText("fetching weather...");
 		updateLabels();
-		question.setText("Which hotter: " + game.quiz.cityA.name + " or " + game.quiz.cityB.name + "?");
-		btnA.setText(game.quiz.cityA.name);
-		btnB.setText(game.quiz.cityB.name);
-		btnA.setEnabled(true);
-		btnB.setEnabled(true);
-		info.setText(game.currentPlayer() + ", your pick...");
+		new SwingWorker<Void, Void>() {
+			protected Void doInBackground() {
+				game.quiz.nextQuestion();
+				return null;
+			}
+
+			protected void done() {
+				if (game.round != myRound || game.p1turn != myTurn) {
+					return;
+				}
+				left = 15;
+				timerLabel.setText(left + "s");
+				timer.restart();
+				question.setText("Which hotter: " + game.quiz.cityA.name + " or " + game.quiz.cityB.name + "?");
+				btnA.setText(game.quiz.cityA.name);
+				btnB.setText(game.quiz.cityB.name);
+				btnA.setEnabled(true);
+				btnB.setEnabled(true);
+				info.setText(game.currentPlayer() + ", your pick...");
+			}
+		}.execute();
 	}
 
 	void nextRoundDelayed() {
