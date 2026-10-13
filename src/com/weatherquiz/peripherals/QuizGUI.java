@@ -46,6 +46,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 	JButton btnOver = null;
 	JButton btnUnder = null;
 	JLabel picLabel = null;
+	JScrollPane picScroll = null;
 	JPanel answers = null;
 	JButton[] numBtns = new JButton[10];
 	JComboBox<String> modeBox = null;
@@ -60,12 +61,19 @@ public class QuizGUI extends JFrame implements ActionListener {
 		opts = new Settings(player);
 		left = opts.seconds;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setLayout(new BorderLayout(8, 8));
+		((JPanel) getContentPane()).setBorder(new javax.swing.border.EmptyBorder(8, 8, 8, 8));
+		setLayout(new BorderLayout(0, 8));
 
-		JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel top = new JPanel(new BorderLayout(0, 4));
+		JPanel status = new JPanel(new BorderLayout());
 		scoreLabel = new JLabel("player: " + player + "  score: 0");
-		timerLabel = new JLabel("15s");
-		timerLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+		timerLabel = new JLabel("15s", JLabel.RIGHT);
+		timerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+		status.add(scoreLabel, BorderLayout.WEST);
+		status.add(timerLabel, BorderLayout.EAST);
+		top.add(status, BorderLayout.NORTH);
+
+		JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 2));
 
 		String[] modes = { "Which hotter?", "Over / Under", "Banana puzzle" };
 		modeBox = new JComboBox<String>(modes);
@@ -94,23 +102,24 @@ public class QuizGUI extends JFrame implements ActionListener {
 		menu.setActionCommand("menu");
 		menu.addActionListener(this);
 
-		top.add(scoreLabel);
-		top.add(timerLabel);
-		top.add(modeBox);
-		top.add(skip);
-		top.add(save);
-		top.add(menu);
-		top.add(logout);
+		controls.add(new JLabel("Mode:"));
+		controls.add(modeBox);
+		controls.add(skip);
+		controls.add(save);
+		controls.add(menu);
+		controls.add(logout);
+		top.add(controls, BorderLayout.SOUTH);
 		add(top, BorderLayout.NORTH);
 
-		JPanel center = new JPanel(new BorderLayout(6, 6));
-		question = new JLabel("loading...");
+		JPanel center = new JPanel(new BorderLayout(0, 6));
+		question = new JLabel("loading...", JLabel.CENTER);
 		question.setFont(new Font("SansSerif", Font.BOLD, 14));
+		question.setBorder(new javax.swing.border.EmptyBorder(4, 4, 4, 4));
 		center.add(question, BorderLayout.NORTH);
 
 		picLabel = new JLabel("", JLabel.CENTER);
-		JScrollPane picScroll = new JScrollPane(picLabel);
-		picScroll.setPreferredSize(new Dimension(520, 300));
+		picScroll = new JScrollPane(picLabel);
+		picScroll.setPreferredSize(new Dimension(500, 300));
 		center.add(picScroll, BorderLayout.CENTER);
 
 		answers = new JPanel(new CardLayout());
@@ -135,9 +144,10 @@ public class QuizGUI extends JFrame implements ActionListener {
 		over.add(btnOver);
 		over.add(btnUnder);
 
-		JPanel digits = new JPanel(new GridLayout(2, 5, 4, 4));
+		JPanel digits = new JPanel(new GridLayout(2, 5, 6, 6));
 		for (int i = 0; i < 10; i++) {
 			numBtns[i] = new JButton(String.valueOf(i));
+			numBtns[i].setFont(new Font("SansSerif", Font.BOLD, 15));
 			numBtns[i].setActionCommand("num" + i);
 			numBtns[i].addActionListener(this);
 			digits.add(numBtns[i]);
@@ -149,9 +159,10 @@ public class QuizGUI extends JFrame implements ActionListener {
 		center.add(answers, BorderLayout.SOUTH);
 		add(center, BorderLayout.CENTER);
 
-		info = new JTextArea(4, 40);
+		info = new JTextArea(3, 40);
 		info.setEditable(false);
 		info.setLineWrap(true);
+		info.setWrapStyleWord(true);
 		add(new JScrollPane(info), BorderLayout.SOUTH);
 
 		countTimer = new Timer(1000, new ActionListener() {
@@ -176,19 +187,21 @@ public class QuizGUI extends JFrame implements ActionListener {
 		});
 
 		pack();
-		setMinimumSize(new Dimension(560, 560));
+		setMinimumSize(new Dimension(620, 600));
 		setLocationRelativeTo(null);
 		newQuestion();
 	}
 
 	ImageIcon fitImage(BufferedImage img) {
-		int maxW = 480;
-		if (img.getWidth() <= maxW) {
+		int maxW = 460;
+		int maxH = 280;
+		int w = img.getWidth();
+		int h = img.getHeight();
+		double r = Math.min((double) maxW / w, (double) maxH / h);
+		if (r >= 1.0) {
 			return new ImageIcon(img);
 		}
-		double r = (double) maxW / img.getWidth();
-		int h = (int) (img.getHeight() * r);
-		return new ImageIcon(img.getScaledInstance(maxW, h, Image.SCALE_SMOOTH));
+		return new ImageIcon(img.getScaledInstance((int) (w * r), (int) (h * r), Image.SCALE_SMOOTH));
 	}
 
 	void showCard(String name) {
@@ -256,6 +269,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 			question.setText("Banana puzzle: missing number?"
 					+ (quiz.bananaOffline ? " (offline)" : " (live)"));
 			BufferedImage img = quiz.getBananaImage();
+			picScroll.setVisible(true);
 			if (img != null) {
 				picLabel.setIcon(fitImage(img));
 				picLabel.setText("");
@@ -273,8 +287,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		left = opts.seconds;
 		timerLabel.setText(left + "s");
 		countTimer.restart();
-		picLabel.setIcon(null);
-		picLabel.setText("");
+		picScroll.setVisible(false);
 		if (mode.startsWith("Which")) {
 			question.setText("Which is hotter: " + quiz.cityA.name + " or " + quiz.cityB.name + "?");
 			btnA.setText(quiz.cityA.name);
