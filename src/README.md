@@ -1,7 +1,7 @@
-# Weather Quiz + Banana round - CIS046-3
+# Banana Quiz + Weather - CIS046-3
 
-Java Swing quiz using Open-Meteo live weather plus Banana API bonus round.
-Login first (default `Ada` / `hello23`), then use the menu: Play, 2 player hotseat, Leaderboard, Settings.
+Java Swing quiz, Banana API first plus Open-Meteo weather modes.
+Login first (default `Ada` / `hello23`, Ada is admin), then use the menu: Play banana quiz, 2 player hotseat, Leaderboard, Settings.
 
 Tomato game from the unit is still in `com.perisic.tomato` for reference. My project is `com.weatherquiz`.
 

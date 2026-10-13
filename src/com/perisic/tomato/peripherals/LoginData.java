@@ -22,15 +22,22 @@ public class LoginData {
 
 	Map<String, String> salts = new HashMap<String, String>();
 	Map<String, String> hashes = new HashMap<String, String>();
+	Map<String, String> roles = new HashMap<String, String>();
 
 	public LoginData() {
 		loadUsers();
 		if (!hashes.containsKey("Ada")) {
 			try {
 				addUser("Ada", "hello23");
+				roles.put("Ada", "admin");
+				saveUsers();
 			} catch (Exception e) {
 				System.out.println("could not create default user");
 			}
+		}
+		// old files had no role column, Ada stays admin
+		if (!roles.containsKey("Ada")) {
+			roles.put("Ada", "admin");
 		}
 	}
 
@@ -74,6 +81,11 @@ public class LoginData {
 				if (parts.length == 3) {
 					salts.put(parts[0], parts[1]);
 					hashes.put(parts[0], parts[2]);
+					roles.put(parts[0], "user");
+				} else if (parts.length == 4) {
+					salts.put(parts[0], parts[1]);
+					hashes.put(parts[0], parts[2]);
+					roles.put(parts[0], parts[3]);
 				}
 			}
 		} catch (IOException e) {
@@ -84,7 +96,11 @@ public class LoginData {
 	void saveUsers() {
 		StringBuilder sb = new StringBuilder();
 		for (String user : hashes.keySet()) {
-			sb.append(user + ":" + salts.get(user) + ":" + hashes.get(user) + "\n");
+			String role = roles.get(user);
+			if (role == null) {
+				role = "user";
+			}
+			sb.append(user + ":" + salts.get(user) + ":" + hashes.get(user) + ":" + role + "\n");
 		}
 		try {
 			Files.write(Paths.get(USER_FILE), sb.toString().getBytes("UTF-8"));
@@ -115,8 +131,19 @@ public class LoginData {
 		String hashHex = hashWithSalt(passwd, salt);
 		salts.put(username, saltHex);
 		hashes.put(username, hashHex);
+		roles.put(username, "user");
 		saveUsers();
 		return true;
+	}
+
+	// roles are only ever set here or for Ada, never from a form
+	public String getRole(String username) {
+		String r = roles.get(username);
+		return r == null ? "user" : r;
+	}
+
+	public boolean isAdmin(String username) {
+		return getRole(username).equals("admin");
 	}
 
 	public boolean checkPassword(String username, String passwd) {

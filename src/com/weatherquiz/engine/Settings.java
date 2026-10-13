@@ -10,7 +10,7 @@ public class Settings {
 
 	String user;
 	public int seconds = 15;
-	public String mode = "Which hotter?";
+	public String mode = "Banana puzzle";
 	public boolean showOffline = true;
 
 	public Settings(String user) {

@@ -23,11 +23,12 @@ public class MenuGUI extends JFrame {
 		super("Menu - " + user);
 		this.user = user;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		String role = new LoginData().getRole(user);
 
 		JPanel panel = new JPanel(new GridLayout(0, 1, 6, 6));
-		panel.add(new JLabel("hi " + user + ", pick one:"));
+		panel.add(new JLabel("hi " + user + " (" + role + "), pick one:"));
 
-		JButton play = new JButton("Play quiz");
+		JButton play = new JButton("Play banana quiz");
 		JButton multi = new JButton("2 player hotseat");
 		JButton board = new JButton("Leaderboard");
 		JButton settings = new JButton("Settings");

@@ -11,15 +11,25 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import com.weatherquiz.engine.Board;
+import com.perisic.tomato.peripherals.LoginData;
 
 public class BoardGUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
 	JTextArea area = new JTextArea(15, 35);
+	String user;
+	boolean admin;
 
 	public BoardGUI(String user) {
 		super("Leaderboard");
+		this.user = user;
+		this.admin = new LoginData().isAdmin(user);
+		if (!admin) {
+			setTitle("My scores - " + user);
+		} else {
+			setTitle("All scores (admin)");
+		}
 		area.setEditable(false);
 		add(new JScrollPane(area), BorderLayout.CENTER);
 
@@ -38,13 +48,26 @@ public class BoardGUI extends JFrame {
 	}
 
 	void load() {
-		List<Board.Row> rows = Board.top(10);
-		String out = "top 10\n\n";
+		List<Board.Row> rows = Board.top(50);
+		String out;
 		int i = 1;
-		for (Board.Row r : rows) {
-			out += i++ + ". " + r.name + " " + r.score + "/" + r.tries + " " + r.mode + "\n";
+		if (admin) {
+			out = "all scores (admin)\n\n";
+			for (Board.Row r : rows) {
+				if (i > 10) {
+					break;
+				}
+				out += i++ + ". " + r.name + " " + r.score + "/" + r.tries + " " + r.mode + "\n";
+			}
+		} else {
+			out = "my scores - " + user + "\n\n";
+			for (Board.Row r : rows) {
+				if (r.name.equals(user)) {
+					out += i++ + ". " + r.score + "/" + r.tries + " " + r.mode + "\n";
+				}
+			}
 		}
-		if (rows.size() == 0) {
+		if (i == 1) {
 			out += "no scores yet, play first";
 		}
 		area.setText(out);
