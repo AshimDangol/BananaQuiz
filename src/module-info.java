@@ -1,9 +1,3 @@
-/**
- * 
- */
-/**
- * 
- */
-module TomatoGame {
+module BananaQuiz {
 	requires java.desktop;
 }

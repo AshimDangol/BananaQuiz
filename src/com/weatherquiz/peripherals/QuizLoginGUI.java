@@ -6,14 +6,13 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import com.perisic.tomato.peripherals.LoginData;
-
-// same login as tomato game, just opens the quiz instead
+// login + signup window, opens the menu when logged in
 // base layout from https://best-programming-tricks.blogspot.com/2011/07/how-to-make-login-form-with-java-gui.html
 public class QuizLoginGUI extends JFrame {
 
@@ -34,16 +33,23 @@ public class QuizLoginGUI extends JFrame {
 	}
 
 	public QuizLoginGUI() {
-		super("Weather Quiz Login");
-		setSize(300, 250);
+		super("Banana Quiz Login");
+		Theme.apply();
+		setSize(320, 300);
 		setLocation(500, 280);
 		panel.setLayout(null);
 
-		txuser.setBounds(70, 30, 150, 20);
-		pass.setBounds(70, 65, 150, 20);
-		blogin.setBounds(40, 100, 80, 20);
-		bsignup.setBounds(140, 100, 90, 20);
-		remember.setBounds(70, 130, 150, 20);
+		JLabel title = new JLabel("Banana Quiz", JLabel.CENTER);
+		title.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 18));
+		title.setForeground(Theme.HEADER_BG);
+		title.setBounds(40, 8, 220, 28);
+		panel.add(title);
+
+		txuser.setBounds(70, 45, 150, 24);
+		pass.setBounds(70, 80, 150, 24);
+		blogin.setBounds(40, 115, 80, 26);
+		bsignup.setBounds(140, 115, 90, 26);
+		remember.setBounds(70, 150, 150, 24);
 
 		panel.add(blogin);
 		panel.add(bsignup);

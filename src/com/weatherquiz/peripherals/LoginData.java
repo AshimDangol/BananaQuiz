@@ -1,4 +1,4 @@
-package com.perisic.tomato.peripherals;
+package com.weatherquiz.peripherals;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-// base code from Marc Conrad TomatoFull, extended by me
+// login logic, started from the TomatoFull example from the unit, extended by me
 // hashing idea from https://stackoverflow.com/questions/33036467/sha-256-password-hashing-in-java
 // session file works like a cookie, idea from week 5 slides on cookies
 public class LoginData {
@@ -19,6 +19,18 @@ public class LoginData {
 	static final String USER_FILE = "users.txt";
 	static final String SESSION_FILE = "session.cookie";
 	static final long SESSION_MINS = 30;
+
+	// one fixed folder so login works no matter where you start the app from
+	static String dataDir() {
+		String home = System.getProperty("user.home");
+		java.io.File d = new java.io.File(home, ".weatherquiz");
+		d.mkdirs();
+		return d.getAbsolutePath();
+	}
+
+	static Path dataPath(String name) {
+		return Paths.get(dataDir(), name);
+	}
 
 	Map<String, String> salts = new HashMap<String, String>();
 	Map<String, String> hashes = new HashMap<String, String>();
@@ -71,7 +83,7 @@ public class LoginData {
 	}
 
 	void loadUsers() {
-		Path p = Paths.get(USER_FILE);
+		Path p = dataPath(USER_FILE);
 		if (!Files.exists(p)) {
 			return;
 		}
@@ -103,7 +115,7 @@ public class LoginData {
 			sb.append(user + ":" + salts.get(user) + ":" + hashes.get(user) + ":" + role + "\n");
 		}
 		try {
-			Files.write(Paths.get(USER_FILE), sb.toString().getBytes("UTF-8"));
+			Files.write(dataPath(USER_FILE), sb.toString().getBytes("UTF-8"));
 		} catch (IOException e) {
 			System.out.println("could not write " + USER_FILE);
 		}
@@ -119,6 +131,9 @@ public class LoginData {
 		}
 		username = username.trim();
 		if (username.equals("") || passwd.length() < 4) {
+			return false;
+		}
+		if (username.contains(":") || username.contains("=")) {
 			return false;
 		}
 		if (userExists(username)) {
@@ -171,7 +186,7 @@ public class LoginData {
 		long expiry = System.currentTimeMillis() + SESSION_MINS * 60 * 1000;
 		String line = token + ":" + username + ":" + expiry + "\n";
 		try {
-			Files.write(Paths.get(SESSION_FILE), line.getBytes("UTF-8"),
+			Files.write(dataPath(SESSION_FILE), line.getBytes("UTF-8"),
 					StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (IOException e) {
 			System.out.println("could not write session");
@@ -180,7 +195,7 @@ public class LoginData {
 	}
 
 	public String checkSession() {
-		Path p = Paths.get(SESSION_FILE);
+		Path p = dataPath(SESSION_FILE);
 		if (!Files.exists(p)) {
 			return null;
 		}
@@ -195,7 +210,12 @@ public class LoginData {
 				Files.deleteIfExists(p);
 				return null;
 			}
-			return parts[1];
+			String who = parts[1].trim();
+			if (!hashes.containsKey(who)) {
+				Files.deleteIfExists(p);
+				return null;
+			}
+			return who;
 		} catch (Exception e) {
 			return null;
 		}
@@ -203,7 +223,7 @@ public class LoginData {
 
 	public void clearSession() {
 		try {
-			Files.deleteIfExists(Paths.get(SESSION_FILE));
+			Files.deleteIfExists(dataPath(SESSION_FILE));
 		} catch (IOException e) {
 			System.out.println("could not clear session");
 		}

@@ -1,5 +1,8 @@
 package com.weatherquiz.peripherals;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -7,10 +10,8 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
-import com.perisic.tomato.peripherals.LoginData;
+import javax.swing.border.EmptyBorder;
 
 // hub after login, keeps single quiz window from doing everything
 public class MenuGUI extends JFrame {
@@ -21,23 +22,30 @@ public class MenuGUI extends JFrame {
 
 	public MenuGUI(String user) {
 		super("Menu - " + user);
+		Theme.apply();
 		this.user = user;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		String role = new LoginData().getRole(user);
 
-		JPanel panel = new JPanel(new GridLayout(0, 1, 6, 6));
-		panel.add(new JLabel("hi " + user + " (" + role + "), pick one:"));
+		JLabel banner = new JLabel("Banana Quiz", JLabel.CENTER);
+		banner.setFont(new Font("SansSerif", Font.BOLD, 22));
+		banner.setOpaque(true);
+		banner.setBackground(Theme.HEADER_BG);
+		banner.setForeground(Theme.HEADER_FG);
+		banner.setBorder(new EmptyBorder(12, 12, 12, 12));
+		getContentPane().add(banner, BorderLayout.NORTH);
+
+		JPanel panel = new JPanel(new GridLayout(0, 1, 8, 8));
+		panel.setBorder(new EmptyBorder(12, 16, 12, 16));
+		JLabel hi = new JLabel("hi " + user + " (" + role + "), pick one:", JLabel.CENTER);
+		panel.add(hi);
 
 		JButton play = new JButton("Play banana quiz");
-		JButton multi = new JButton("2 player hotseat");
 		JButton board = new JButton("Leaderboard");
-		JButton settings = new JButton("Settings");
 		JButton logout = new JButton("Logout");
 
 		panel.add(play);
-		panel.add(multi);
 		panel.add(board);
-		panel.add(settings);
 		panel.add(logout);
 
 		play.addActionListener(new ActionListener() {
@@ -47,27 +55,10 @@ public class MenuGUI extends JFrame {
 				dispose();
 			}
 		});
-		multi.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String p2 = JOptionPane.showInputDialog("player 2 name?");
-				if (p2 == null || p2.trim().equals("")) {
-					return;
-				}
-				MultiGUI m = new MultiGUI(user, p2.trim());
-				m.setVisible(true);
-				dispose();
-			}
-		});
 		board.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				BoardGUI b = new BoardGUI(user);
 				b.setVisible(true);
-			}
-		});
-		settings.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				SettingsGUI s = new SettingsGUI(user);
-				s.setVisible(true);
 			}
 		});
 		logout.addActionListener(new ActionListener() {
@@ -79,7 +70,8 @@ public class MenuGUI extends JFrame {
 			}
 		});
 
-		getContentPane().add(panel);
+		getContentPane().add(panel, BorderLayout.CENTER);
+		setMinimumSize(new Dimension(320, 300));
 		pack();
 		setLocationRelativeTo(null);
 		setVisible(true);

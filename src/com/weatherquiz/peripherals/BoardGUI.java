@@ -11,7 +11,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import com.weatherquiz.engine.Board;
-import com.perisic.tomato.peripherals.LoginData;
 
 public class BoardGUI extends JFrame {
 
@@ -23,6 +22,7 @@ public class BoardGUI extends JFrame {
 
 	public BoardGUI(String user) {
 		super("Leaderboard");
+		Theme.apply();
 		this.user = user;
 		this.admin = new LoginData().isAdmin(user);
 		if (!admin) {
