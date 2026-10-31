@@ -1,5 +1,10 @@
 package com.weatherquiz.peripherals;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -11,6 +16,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
 
 // login + signup window, opens the menu when logged in
 // base layout from https://best-programming-tricks.blogspot.com/2011/07/how-to-make-login-form-with-java-gui.html
@@ -21,9 +27,8 @@ public class QuizLoginGUI extends JFrame {
 	JButton blogin = new JButton("Login");
 	JButton bsignup = new JButton("Sign up");
 	JCheckBox remember = new JCheckBox("remember me", true);
-	JPanel panel = new JPanel();
-	JTextField txuser = new JTextField(15);
-	JPasswordField pass = new JPasswordField(15);
+	JTextField txuser = new JTextField(14);
+	JPasswordField pass = new JPasswordField(14);
 
 	LoginData ldata = new LoginData();
 
@@ -35,30 +40,46 @@ public class QuizLoginGUI extends JFrame {
 	public QuizLoginGUI() {
 		super("Banana Quiz Login");
 		Theme.apply();
-		setSize(320, 300);
-		setLocation(500, 280);
-		panel.setLayout(null);
-
-		JLabel title = new JLabel("Banana Quiz", JLabel.CENTER);
-		title.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 18));
-		title.setForeground(Theme.HEADER_BG);
-		title.setBounds(40, 8, 220, 28);
-		panel.add(title);
-
-		txuser.setBounds(70, 45, 150, 24);
-		pass.setBounds(70, 80, 150, 24);
-		blogin.setBounds(40, 115, 80, 26);
-		bsignup.setBounds(140, 115, 90, 26);
-		remember.setBounds(70, 150, 150, 24);
-
-		panel.add(blogin);
-		panel.add(bsignup);
-		panel.add(txuser);
-		panel.add(pass);
-		panel.add(remember);
-
-		getContentPane().add(panel);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setLayout(new BorderLayout());
+		add(Theme.banner("Banana Quiz", 24), BorderLayout.NORTH);
+
+		JPanel form = new JPanel(new GridBagLayout());
+		form.setBorder(new EmptyBorder(18, 24, 10, 24));
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(6, 6, 6, 6);
+		c.anchor = GridBagConstraints.WEST;
+
+		c.gridx = 0;
+		c.gridy = 0;
+		form.add(new JLabel("username:"), c);
+		c.gridx = 1;
+		form.add(txuser, c);
+
+		c.gridx = 0;
+		c.gridy = 1;
+		form.add(new JLabel("password:"), c);
+		c.gridx = 1;
+		form.add(pass, c);
+
+		c.gridx = 1;
+		c.gridy = 2;
+		c.anchor = GridBagConstraints.CENTER;
+		form.add(remember, c);
+		add(form, BorderLayout.CENTER);
+
+		JPanel buttons = new JPanel();
+		buttons.setBorder(new EmptyBorder(4, 24, 18, 24));
+		Theme.button(blogin, Theme.ACCENT);
+		Theme.button(bsignup, Theme.SURFACE);
+		buttons.add(blogin);
+		buttons.add(bsignup);
+		add(buttons, BorderLayout.SOUTH);
+
+		getRootPane().setDefaultButton(blogin);
+		pack();
+		setMinimumSize(new Dimension(340, getHeight()));
+		setLocationRelativeTo(null);
 		setVisible(true);
 
 		String saved = ldata.checkSession();

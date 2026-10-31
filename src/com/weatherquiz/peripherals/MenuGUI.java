@@ -2,7 +2,6 @@ package com.weatherquiz.peripherals;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,22 +26,21 @@ public class MenuGUI extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		String role = new LoginData().getRole(user);
 
-		JLabel banner = new JLabel("Banana Quiz", JLabel.CENTER);
-		banner.setFont(new Font("SansSerif", Font.BOLD, 22));
-		banner.setOpaque(true);
-		banner.setBackground(Theme.HEADER_BG);
-		banner.setForeground(Theme.HEADER_FG);
-		banner.setBorder(new EmptyBorder(12, 12, 12, 12));
-		getContentPane().add(banner, BorderLayout.NORTH);
+		getContentPane().add(Theme.banner("Banana Quiz", 22), BorderLayout.NORTH);
 
 		JPanel panel = new JPanel(new GridLayout(0, 1, 8, 8));
-		panel.setBorder(new EmptyBorder(12, 16, 12, 16));
+		panel.setBorder(new EmptyBorder(16, 24, 16, 24));
 		JLabel hi = new JLabel("hi " + user + " (" + role + "), pick one:", JLabel.CENTER);
+		hi.setForeground(Theme.TEXT);
 		panel.add(hi);
 
 		JButton play = new JButton("Play banana quiz");
 		JButton board = new JButton("Leaderboard");
 		JButton logout = new JButton("Logout");
+		play.setFont(play.getFont().deriveFont(15f));
+		Theme.button(play, Theme.ACCENT);
+		Theme.button(board, Theme.SURFACE);
+		Theme.button(logout, Theme.BAD);
 
 		panel.add(play);
 		panel.add(board);
