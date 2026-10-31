@@ -13,18 +13,18 @@ run.bat
 or by hand:
 
 ```bat
-javac -d bin src/module-info.java src/com/weatherquiz/engine/*.java src/com/weatherquiz/peripherals/*.java
+javac -d bin src/module-info.java src/com/bananaquiz/engine/*.java src/com/bananaquiz/peripherals/*.java
 copy src\banana1.png bin\
-java -cp bin com.weatherquiz.peripherals.QuizLoginGUI
+java -cp bin com.bananaquiz.peripherals.QuizLoginGUI
 ```
 
 ## notes
 
 - banana questions come from https://marcconrad.com/uob/banana/api.php?out=csv&base64=yes.
 - offline fallback uses `banana1.png` if the api is down, tagged (offline).
-- users stored hashed (SHA-256 + salt) in `~/.weatherquiz/users.txt`.
-- session token in `~/.weatherquiz/session.cookie`, expires after 30 mins.
-- scores in `~/.weatherquiz/scores.txt`.
+- users stored hashed (SHA-256 + salt) in `~/.bananaquiz/users.txt`.
+- session token in `~/.bananaquiz/session.cookie`, expires after 30 mins.
+- scores in `~/.bananaquiz/scores.txt`.
 - leaderboard: normal users see own scores, Ada (admin) sees all.
 
 based on the TomatoFull example from the unit. see source comments for links used.

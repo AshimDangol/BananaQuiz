@@ -1,4 +1,4 @@
-package com.weatherquiz.engine;
+package com.bananaquiz.engine;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -13,7 +13,7 @@ public class Board {
 
 	static String file() {
 		String home = System.getProperty("user.home");
-		java.io.File d = new java.io.File(home, ".weatherquiz");
+		java.io.File d = new java.io.File(home, ".bananaquiz");
 		d.mkdirs();
 		return new java.io.File(d, "scores.txt").getAbsolutePath();
 	}

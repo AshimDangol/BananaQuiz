@@ -1,4 +1,4 @@
-package com.weatherquiz.peripherals;
+package com.bananaquiz.peripherals;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -20,8 +20,8 @@ import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 
-import com.weatherquiz.engine.Board;
-import com.weatherquiz.engine.QuizEngine;
+import com.bananaquiz.engine.Board;
+import com.bananaquiz.engine.QuizEngine;
 
 // main window for the banana quiz
 // button + timer events all in here

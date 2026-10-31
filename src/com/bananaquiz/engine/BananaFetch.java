@@ -1,4 +1,4 @@
-package com.weatherquiz.engine;
+package com.bananaquiz.engine;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;

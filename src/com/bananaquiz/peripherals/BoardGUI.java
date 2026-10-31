@@ -1,4 +1,4 @@
-package com.weatherquiz.peripherals;
+package com.bananaquiz.peripherals;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -13,7 +13,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import com.weatherquiz.engine.Board;
+import com.bananaquiz.engine.Board;
 
 // scores table, admin sees every row, normal users only their own
 public class BoardGUI extends JFrame {

@@ -1,4 +1,4 @@
-package com.weatherquiz.peripherals;
+package com.bananaquiz.peripherals;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;

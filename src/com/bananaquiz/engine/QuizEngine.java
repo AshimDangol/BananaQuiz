@@ -1,4 +1,4 @@
-package com.weatherquiz.engine;
+package com.bananaquiz.engine;
 
 // keeps score and talks to BananaFetch for each question
 // structure follows GameEngine from the TomatoFull example (Marc Conrad, unit BREO site)

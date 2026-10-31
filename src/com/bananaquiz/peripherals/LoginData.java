@@ -1,4 +1,4 @@
-package com.weatherquiz.peripherals;
+package com.bananaquiz.peripherals;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,7 +23,7 @@ public class LoginData {
 	// one fixed folder so login works no matter where you start the app from
 	static String dataDir() {
 		String home = System.getProperty("user.home");
-		java.io.File d = new java.io.File(home, ".weatherquiz");
+		java.io.File d = new java.io.File(home, ".bananaquiz");
 		d.mkdirs();
 		return d.getAbsolutePath();
 	}
