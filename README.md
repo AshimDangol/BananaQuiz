@@ -28,3 +28,13 @@ java -cp bin com.weatherquiz.peripherals.QuizLoginGUI
 - leaderboard: normal users see own scores, Ada (admin) sees all.
 
 based on the TomatoFull example from the unit. see source comments for links used.
+
+## acknowledgements
+
+layout and event handling started from the TomatoFull example by Marc Conrad (unit
+BREO site, https://github.com/marcconrad/comparativeintegratedsystems). password
+hashing snippet from https://stackoverflow.com/questions/33036467/sha-256-password-hashing-in-java.
+login form layout from https://best-programming-tricks.blogspot.com/2011/07/how-to-make-login-form-with-java-gui.html.
+questions and images from the Banana API by Marc Conrad (https://marcconrad.com/uob/banana/doc.php).
+some parts of this project were written with AI assistance; each borrowed or
+AI-assisted piece is marked with a comment in the source file where it is used.

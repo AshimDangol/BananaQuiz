@@ -1,22 +1,27 @@
 package com.weatherquiz.peripherals;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import com.weatherquiz.engine.Board;
 
+// scores table, admin sees every row, normal users only their own
 public class BoardGUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	JTextArea area = new JTextArea(15, 35);
+	String[] cols = { "#", "name", "score", "tries", "mode" };
+	JTable table = new JTable();
 	String user;
 	boolean admin;
 
@@ -30,16 +35,24 @@ public class BoardGUI extends JFrame {
 		} else {
 			setTitle("All scores (admin)");
 		}
-		area.setEditable(false);
-		add(new JScrollPane(area), BorderLayout.CENTER);
+
+		table.setRowHeight(24);
+		table.setFillsViewportHeight(true);
+		table.setDefaultEditor(Object.class, null);
+		JScrollPane scroll = new JScrollPane(table);
+		scroll.setPreferredSize(new Dimension(460, 320));
+		add(scroll, BorderLayout.CENTER);
 
 		JButton refresh = new JButton("Refresh");
+		Theme.button(refresh, Theme.ACCENT);
 		refresh.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				load();
 			}
 		});
-		add(refresh, BorderLayout.SOUTH);
+		JPanel south = new JPanel();
+		south.add(refresh);
+		add(south, BorderLayout.SOUTH);
 
 		pack();
 		setLocationRelativeTo(null);
@@ -49,27 +62,33 @@ public class BoardGUI extends JFrame {
 
 	void load() {
 		List<Board.Row> rows = Board.top(50);
-		String out;
+		java.util.ArrayList<String[]> list = new java.util.ArrayList<String[]>();
 		int i = 1;
 		if (admin) {
-			out = "all scores (admin)\n\n";
 			for (Board.Row r : rows) {
-				if (i > 10) {
-					break;
-				}
-				out += i++ + ". " + r.name + " " + r.score + "/" + r.tries + " " + r.mode + "\n";
+				list.add(new String[] { String.valueOf(i++), r.name,
+						String.valueOf(r.score), String.valueOf(r.tries), r.mode });
 			}
 		} else {
-			out = "my scores - " + user + "\n\n";
 			for (Board.Row r : rows) {
 				if (r.name.equals(user)) {
-					out += i++ + ". " + r.score + "/" + r.tries + " " + r.mode + "\n";
+					list.add(new String[] { String.valueOf(i++), r.name,
+							String.valueOf(r.score), String.valueOf(r.tries), r.mode });
 				}
 			}
 		}
-		if (i == 1) {
-			out += "no scores yet, play first";
+		String[][] out;
+		if (list.isEmpty()) {
+			out = new String[][] { { "", "no scores yet, play first", "", "", "" } };
+		} else {
+			out = list.toArray(new String[0][]);
 		}
-		area.setText(out);
+		table.setModel(new DefaultTableModel(out, cols) {
+			private static final long serialVersionUID = 1L;
+
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		});
 	}
 }

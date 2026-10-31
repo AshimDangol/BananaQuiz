@@ -49,10 +49,15 @@ public class Board {
 				return rows;
 			}
 			for (String line : Files.readAllLines(Paths.get(file()))) {
-				String[] p = line.split(":");
-				if (p.length >= 4) {
-					rows.add(new Row(p[0], Integer.parseInt(p[1]),
-							Integer.parseInt(p[2]), p[3]));
+				// one bad line should not kill the whole board
+				try {
+					String[] p = line.split(":");
+					if (p.length >= 4) {
+						rows.add(new Row(p[0], Integer.parseInt(p[1]),
+								Integer.parseInt(p[2]), p[3]));
+					}
+				} catch (Exception badLine) {
+					System.out.println("skipping bad score line: " + line);
 				}
 			}
 		} catch (Exception e) {

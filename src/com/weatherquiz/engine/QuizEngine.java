@@ -1,6 +1,7 @@
 package com.weatherquiz.engine;
 
 // keeps score and talks to BananaFetch for each question
+// structure follows GameEngine from the TomatoFull example (Marc Conrad, unit BREO site)
 public class QuizEngine {
 
 	BananaFetch banana = new BananaFetch();
