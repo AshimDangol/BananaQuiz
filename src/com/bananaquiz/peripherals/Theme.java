@@ -1,11 +1,18 @@
 package com.bananaquiz.peripherals;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 // one place for colors and styling so every window matches
@@ -22,6 +29,17 @@ public class Theme {
 	public static final Color CARD_BORDER = new Color(210, 218, 228);
 	public static final Color TEXT = new Color(44, 62, 80);
 
+	static final String UI_FONT = "Segoe UI";
+
+	// segoe ui on windows, falls back to plain sans on other systems
+	public static Font font(int style, float size) {
+		Font f = new Font(UI_FONT, style, (int) size);
+		if (!f.getFamily().equalsIgnoreCase(UI_FONT)) {
+			f = new Font("SansSerif", style, (int) size);
+		}
+		return f.deriveFont(size);
+	}
+
 	public static void apply() {
 		try {
 			for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -33,12 +51,12 @@ public class Theme {
 		} catch (Exception e) {
 			System.out.println("nimbus missing, using default");
 		}
-		UIManager.put("Button.font", new Font("SansSerif", Font.BOLD, 13));
-		UIManager.put("Label.font", new Font("SansSerif", Font.PLAIN, 13));
+		UIManager.put("Button.font", font(Font.BOLD, 13));
+		UIManager.put("Label.font", font(Font.PLAIN, 13));
 	}
 
-	// flat button, white text, subtle darker edge
-	public static void button(JButton b, Color bg) {
+	// flat button, white text, subtle darker edge, lightens on hover
+	public static void button(final JButton b, final Color bg) {
 		b.setOpaque(true);
 		b.setBackground(bg);
 		b.setForeground(Color.WHITE);
@@ -46,16 +64,38 @@ public class Theme {
 		b.setBorder(BorderFactory.createCompoundBorder(
 				BorderFactory.createLineBorder(bg.darker()),
 				BorderFactory.createEmptyBorder(7, 16, 7, 16)));
+		b.addMouseListener(new MouseAdapter() {
+			public void mouseEntered(MouseEvent e) {
+				if (b.isEnabled()) {
+					b.setBackground(bg.brighter());
+				}
+			}
+
+			public void mouseExited(MouseEvent e) {
+				b.setBackground(bg);
+			}
+		});
 	}
 
-	public static JLabel banner(String text, int size) {
-		JLabel l = new JLabel(text, JLabel.CENTER);
-		l.setFont(new Font("SansSerif", Font.BOLD, size));
-		l.setOpaque(true);
-		l.setBackground(HEADER_BG);
+	// navy to blue gradient header, nicer than a flat block
+	public static JPanel banner(String text, int size) {
+		final JLabel l = new JLabel(text, JLabel.CENTER);
+		l.setFont(font(Font.BOLD, size));
 		l.setForeground(HEADER_FG);
-		l.setBorder(BorderFactory.createEmptyBorder(14, 12, 14, 12));
-		return l;
+		l.setOpaque(false);
+		JPanel p = new JPanel(new BorderLayout()) {
+			private static final long serialVersionUID = 1L;
+
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				Graphics2D g2 = (Graphics2D) g;
+				g2.setPaint(new GradientPaint(0, 0, HEADER_BG, getWidth(), 0, ACCENT));
+				g2.fillRect(0, 0, getWidth(), getHeight());
+			}
+		};
+		p.add(l, BorderLayout.CENTER);
+		p.setBorder(BorderFactory.createEmptyBorder(14, 12, 14, 12));
+		return p;
 	}
 
 	public static javax.swing.border.Border card() {

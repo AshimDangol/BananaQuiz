@@ -1,9 +1,11 @@
 package com.bananaquiz.peripherals;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -15,6 +17,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
@@ -36,13 +39,18 @@ public class QuizGUI extends JFrame implements ActionListener {
 	JLabel timerLabel = null;
 	JTextArea info = null;
 	JLabel picLabel = null;
+	JPanel status = null;
+	JProgressBar timeBar = null;
 	JButton[] numBtns = new JButton[10];
 	JButton saveBtn = null;
 	Timer countTimer = null;
 	Timer pauseTimer = null;
+	Timer fadeTimer = null;
+	Timer flashTimer = null;
 	boolean saved = false;
 	int left = 20;
 	int loadToken = 0;
+	static final int TIME_MAX = 20;
 
 	public QuizGUI(String player) {
 		super("Banana Quiz - " + player);
@@ -53,7 +61,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		setLayout(new BorderLayout(0, 8));
 
 		JPanel top = new JPanel(new BorderLayout(0, 6));
-		JPanel status = new JPanel(new BorderLayout());
+		status = new JPanel(new BorderLayout());
 		status.setOpaque(true);
 		status.setBackground(Theme.HEADER_BG);
 		status.setBorder(new javax.swing.border.EmptyBorder(6, 10, 6, 10));
@@ -61,10 +69,19 @@ public class QuizGUI extends JFrame implements ActionListener {
 		scoreLabel.setForeground(Theme.HEADER_FG);
 		timerLabel = new JLabel("20s", JLabel.RIGHT);
 		timerLabel.setForeground(Theme.HEADER_FG);
-		timerLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+		timerLabel.setFont(Theme.font(Font.BOLD, 18));
 		status.add(scoreLabel, BorderLayout.WEST);
 		status.add(timerLabel, BorderLayout.EAST);
 		top.add(status, BorderLayout.NORTH);
+
+		// thin bar that drains with the timer, yellow when nearly out
+		timeBar = new JProgressBar(0, TIME_MAX);
+		timeBar.setValue(TIME_MAX);
+		timeBar.setForeground(Theme.ACCENT);
+		timeBar.setBackground(Theme.CARD_BORDER);
+		timeBar.setPreferredSize(new Dimension(0, 6));
+		timeBar.setBorderPainted(false);
+		top.add(timeBar, BorderLayout.CENTER);
 
 		JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
 
@@ -98,7 +115,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 
 		JPanel center = new JPanel(new BorderLayout(0, 6));
 		question = new JLabel("loading...", JLabel.CENTER);
-		question.setFont(new Font("SansSerif", Font.BOLD, 16));
+		question.setFont(Theme.font(Font.BOLD, 16));
 		question.setForeground(Theme.HEADER_BG);
 		question.setBorder(new javax.swing.border.EmptyBorder(6, 4, 6, 4));
 		center.add(question, BorderLayout.NORTH);
@@ -116,7 +133,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		digits.setBorder(new javax.swing.border.EmptyBorder(4, 0, 4, 0));
 		for (int i = 0; i < 10; i++) {
 			numBtns[i] = new JButton(String.valueOf(i));
-			numBtns[i].setFont(new Font("SansSerif", Font.BOLD, 16));
+			numBtns[i].setFont(Theme.font(Font.BOLD, 16));
 			numBtns[i].setActionCommand("num" + i);
 			numBtns[i].addActionListener(this);
 			Theme.button(numBtns[i], Theme.ACCENT);
@@ -141,11 +158,15 @@ public class QuizGUI extends JFrame implements ActionListener {
 			public void actionPerformed(ActionEvent e) {
 				left--;
 				timerLabel.setText(left + "s");
-				timerLabel.setForeground(left <= 5 ? Theme.WARN : Theme.HEADER_FG);
+				boolean warn = left <= 5;
+				timerLabel.setForeground(warn ? Theme.WARN : Theme.HEADER_FG);
+				timeBar.setValue(Math.max(left, 0));
+				timeBar.setForeground(warn ? Theme.WARN : Theme.ACCENT);
 				if (left <= 0) {
 					info.setText("time up! answer was " + quiz.bananaSolution);
 					quiz.miss();
 					updateScore();
+					flash(Theme.WARN);
 					newQuestionDelayed();
 				}
 			}
@@ -157,16 +178,23 @@ public class QuizGUI extends JFrame implements ActionListener {
 		newQuestion();
 	}
 
-	ImageIcon fitImage(BufferedImage img) {
+	// scales down to fit the picture area, unchanged if already small enough
+	BufferedImage fitImage(BufferedImage img) {
 		int maxW = 460;
 		int maxH = 280;
 		int w = img.getWidth();
 		int h = img.getHeight();
 		double r = Math.min((double) maxW / w, (double) maxH / h);
 		if (r >= 1.0) {
-			return new ImageIcon(img);
+			return img;
 		}
-		return new ImageIcon(img.getScaledInstance((int) (w * r), (int) (h * r), Image.SCALE_SMOOTH));
+		int nw = (int) (w * r);
+		int nh = (int) (h * r);
+		BufferedImage out = new BufferedImage(nw, nh, BufferedImage.TYPE_INT_ARGB);
+		java.awt.Graphics2D g = out.createGraphics();
+		g.drawImage(img.getScaledInstance(nw, nh, Image.SCALE_SMOOTH), 0, 0, null);
+		g.dispose();
+		return out;
 	}
 
 	void updateScore() {
@@ -214,21 +242,66 @@ public class QuizGUI extends JFrame implements ActionListener {
 	}
 
 	void showLoaded() {
-		left = 20;
-		timerLabel.setText("20s");
+		left = TIME_MAX;
+		timerLabel.setText(TIME_MAX + "s");
+		timeBar.setValue(TIME_MAX);
+		timeBar.setForeground(Theme.ACCENT);
 		countTimer.restart();
 		question.setText("Banana puzzle: missing number?"
 				+ (quiz.bananaOffline ? " (offline)" : " (live)"));
 		BufferedImage img = quiz.getBananaImage();
 		if (img != null) {
-			picLabel.setIcon(fitImage(img));
 			picLabel.setText("");
+			fadeIn(fitImage(img));
 		} else {
 			picLabel.setIcon(null);
 			picLabel.setText("no image, check net");
 		}
 		digitsOn();
 		info.setText("pick 0-9...");
+	}
+
+	// background pops to a color then fades back to navy
+	void flash(final Color hit) {
+		status.setBackground(hit);
+		if (flashTimer != null) {
+			flashTimer.stop();
+		}
+		flashTimer = new Timer(450, new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				status.setBackground(Theme.HEADER_BG);
+				((Timer) e.getSource()).stop();
+			}
+		});
+		flashTimer.setRepeats(false);
+		flashTimer.start();
+	}
+
+	// picture appears by opacity ramping up over ~0.3s
+	void fadeIn(final BufferedImage img) {
+		if (fadeTimer != null) {
+			fadeTimer.stop();
+		}
+		final float[] step = { 0.2f };
+		fadeTimer = new Timer(35, new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				BufferedImage frame = new BufferedImage(
+						img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+				java.awt.Graphics2D g = frame.createGraphics();
+				g.setComposite(java.awt.AlphaComposite.getInstance(
+						java.awt.AlphaComposite.SRC_OVER, step[0]));
+				g.drawImage(img, 0, 0, null);
+				g.dispose();
+				picLabel.setIcon(new ImageIcon(frame));
+				step[0] += 0.15f;
+				if (step[0] >= 1.0f) {
+					picLabel.setIcon(new ImageIcon(img));
+					((Timer) e.getSource()).stop();
+				}
+			}
+		});
+		fadeTimer.setRepeats(true);
+		fadeTimer.start();
 	}
 
 	// short pause so you can read the result before next loads
@@ -292,8 +365,10 @@ public class QuizGUI extends JFrame implements ActionListener {
 			boolean ok = quiz.checkBanana(guess);
 			if (ok) {
 				info.setText("right! answer was " + quiz.bananaSolution);
+				flash(Theme.GOOD);
 			} else {
 				info.setText("wrong. answer was " + quiz.bananaSolution);
+				flash(Theme.BAD);
 			}
 			updateScore();
 			newQuestionDelayed();
