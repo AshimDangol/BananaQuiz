@@ -17,13 +17,27 @@ public class QuizEngine {
 		this.player = player;
 	}
 
-	public boolean nextBanana() {
-		boolean ok = banana.next();
-		if (ok) {
-			bananaSolution = banana.solution;
-			bananaOffline = banana.offline;
+	// background thread only, does not touch the public fields,
+	// the result goes back through acceptBanana on the UI thread
+	public BananaFetch.Question fetchBanana() {
+		return banana.fetch();
+	}
+
+	// UI thread only, swaps in a finished fetch, returns false if it
+	// was null so the caller can bail before starting the timer
+	public boolean acceptBanana(BananaFetch.Question q) {
+		if (q == null) {
+			return false;
 		}
-		return ok;
+		banana.commit(q);
+		bananaSolution = q.solution;
+		bananaOffline = q.offline;
+		return true;
+	}
+
+	// fetch and commit in one go, kept for tests
+	public boolean nextBanana() {
+		return acceptBanana(banana.fetch());
 	}
 
 	public java.awt.image.BufferedImage getBananaImage() {

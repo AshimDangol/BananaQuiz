@@ -14,6 +14,20 @@ import javax.imageio.ImageIO;
 // same csv+base64 style as the tomato api, so easy to compare in video
 public class BananaFetch {
 
+	// bundled together so image and answer can never get mixed up
+	// between two fetches running at the same time
+	public static class Question {
+		public final BufferedImage image;
+		public final int solution;
+		public final boolean offline;
+
+		Question(BufferedImage image, int solution, boolean offline) {
+			this.image = image;
+			this.solution = solution;
+			this.offline = offline;
+		}
+	}
+
 	public BufferedImage image = null;
 	public int solution = -1;
 	public boolean offline = false;
@@ -24,26 +38,28 @@ public class BananaFetch {
 			URLConnection conn = url.openConnection();
 			conn.setConnectTimeout(6000);
 			conn.setReadTimeout(6000);
-			InputStream in = conn.getInputStream();
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			byte[] buf = new byte[4096];
-			int n;
-			while ((n = in.read(buf)) != -1) {
-				out.write(buf, 0, n);
+			try (InputStream in = conn.getInputStream()) {
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				byte[] buf = new byte[4096];
+				int n;
+				while ((n = in.read(buf)) != -1) {
+					out.write(buf, 0, n);
+				}
+				return out.toString("UTF-8");
 			}
-			in.close();
-			return out.toString("UTF-8");
 		} catch (Exception e) {
 			System.out.println("banana api fail: " + e.getMessage());
 			return null;
 		}
 	}
 
-	public boolean next() {
+	// fetches without touching the public fields, the caller decides
+	// when to commit the result, so a stale fetch can be thrown away
+	public Question fetch() {
 		String api = "https://marcconrad.com/uob/banana/api.php?out=csv&base64=yes";
 		String raw = readUrl(api);
 		if (raw == null || !raw.contains(",")) {
-			return offline();
+			return offlineQuestion();
 		}
 		try {
 			// csv is base64,png solution is after last comma
@@ -53,27 +69,53 @@ public class BananaFetch {
 			byte[] bytes = Base64.getDecoder().decode(b64);
 			BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
 			if (img == null) {
-				return offline();
+				return offlineQuestion();
 			}
-			image = img;
-			solution = sol;
-			offline = false;
-			return true;
+			return new Question(img, sol, false);
 		} catch (Exception e) {
 			System.out.println("bad banana data: " + e.getMessage());
-			return offline();
+			return offlineQuestion();
 		}
 	}
 
-	boolean offline() {
-		try {
-			InputStream in = BananaFetch.class.getResourceAsStream("/banana1.png");
-			image = ImageIO.read(in);
-			solution = 4;
-			offline = true;
-			return image != null;
+	Question offlineQuestion() {
+		try (InputStream in = BananaFetch.class.getResourceAsStream("/banana1.png")) {
+			if (in == null) {
+				return null;
+			}
+			BufferedImage img = ImageIO.read(in);
+			if (img == null) {
+				return null;
+			}
+			return new Question(img, 4, true);
 		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	public void commit(Question q) {
+		image = q.image;
+		solution = q.solution;
+		offline = q.offline;
+	}
+
+	// fetch and commit in one go, used by tests
+	public boolean next() {
+		Question q = fetch();
+		if (q == null) {
 			return false;
 		}
+		commit(q);
+		return true;
+	}
+
+	// loads the bundled picture straight away, used by tests
+	boolean offline() {
+		Question q = offlineQuestion();
+		if (q == null) {
+			return false;
+		}
+		commit(q);
+		return true;
 	}
 }

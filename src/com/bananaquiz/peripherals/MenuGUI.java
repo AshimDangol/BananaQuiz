@@ -57,21 +57,21 @@ public class MenuGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				BoardGUI b = new BoardGUI(user);
 				b.setVisible(true);
+				dispose();
 			}
 		});
 		logout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				new LoginData().clearSession();
-				QuizLoginGUI l = new QuizLoginGUI();
-				l.setVisible(true);
+				// login window shows itself now, no setVisible after this
+				new QuizLoginGUI();
 				dispose();
 			}
 		});
 
 		getContentPane().add(panel, BorderLayout.CENTER);
-		setMinimumSize(new Dimension(320, 300));
-		pack();
-		setLocationRelativeTo(null);
+		setMinimumSize(new Dimension(340, 300));
+		Theme.openCentered(this);
 		setVisible(true);
 	}
 }

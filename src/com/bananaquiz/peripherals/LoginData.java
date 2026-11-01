@@ -50,6 +50,9 @@ public class LoginData {
 		// old files had no role column, Ada stays admin
 		if (!roles.containsKey("Ada")) {
 			roles.put("Ada", "admin");
+			// rewrite the file in the new 4 column format so this
+			// only has to happen once
+			saveUsers();
 		}
 	}
 
@@ -91,9 +94,10 @@ public class LoginData {
 			for (String line : Files.readAllLines(p)) {
 				String[] parts = line.split(":");
 				if (parts.length == 3) {
+					// old format had no role column, leave it out so the
+					// upgrade below can spot Ada and keep her as admin
 					salts.put(parts[0], parts[1]);
 					hashes.put(parts[0], parts[2]);
-					roles.put(parts[0], "user");
 				} else if (parts.length == 4) {
 					salts.put(parts[0], parts[1]);
 					hashes.put(parts[0], parts[2]);

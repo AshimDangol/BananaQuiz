@@ -33,8 +33,7 @@ public class QuizLoginGUI extends JFrame {
 	LoginData ldata = new LoginData();
 
 	public static void main(String[] args) {
-		QuizLoginGUI l = new QuizLoginGUI();
-		l.setVisible(true);
+		new QuizLoginGUI();
 	}
 
 	public QuizLoginGUI() {
@@ -77,17 +76,19 @@ public class QuizLoginGUI extends JFrame {
 		add(buttons, BorderLayout.SOUTH);
 
 		getRootPane().setDefaultButton(blogin);
-		pack();
-		setMinimumSize(new Dimension(340, getHeight()));
-		setLocationRelativeTo(null);
-		setVisible(true);
+		setMinimumSize(new Dimension(340, 260));
+		Theme.openCentered(this);
 
+		// window shows itself only when there is no session to resume;
+		// a saved session opens the menu instead, so callers must not
+		// call setVisible(true) on this frame afterwards
 		String saved = ldata.checkSession();
 		if (saved != null) {
 			openQuiz(saved);
 			return;
 		}
 		actions();
+		setVisible(true);
 	}
 
 	void openQuiz(String user) {
@@ -133,6 +134,8 @@ public class QuizLoginGUI extends JFrame {
 				} catch (Exception e) {
 					JOptionPane.showMessageDialog(null, "error making account");
 				}
+				// password stays on screen after the popup, wipe it
+				pass.setText("");
 			}
 		});
 	}

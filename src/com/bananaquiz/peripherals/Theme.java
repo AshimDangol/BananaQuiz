@@ -2,15 +2,19 @@ package com.bananaquiz.peripherals;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
@@ -102,5 +106,21 @@ public class Theme {
 		return BorderFactory.createCompoundBorder(
 				BorderFactory.createLineBorder(CARD_BORDER),
 				BorderFactory.createEmptyBorder(8, 8, 8, 8));
+	}
+
+	// every window opens through here: pack, never smaller than its minimum,
+	// never bigger than the usable screen, always centered
+	public static void openCentered(JFrame w) {
+		w.pack();
+		Dimension min = w.getMinimumSize();
+		int width = Math.max(w.getWidth(), min.width);
+		int height = Math.max(w.getHeight(), min.height);
+		// taskbar-aware usable area, so it never opens off-screen
+		Rectangle max = GraphicsEnvironment.getLocalGraphicsEnvironment()
+				.getMaximumWindowBounds();
+		width = Math.min(width, max.width);
+		height = Math.min(height, max.height);
+		w.setSize(width, height);
+		w.setLocationRelativeTo(null);
 	}
 }

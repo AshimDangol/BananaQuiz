@@ -23,6 +23,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 
+import com.bananaquiz.engine.BananaFetch;
 import com.bananaquiz.engine.Board;
 import com.bananaquiz.engine.QuizEngine;
 
@@ -172,9 +173,8 @@ public class QuizGUI extends JFrame implements ActionListener {
 			}
 		});
 
-		pack();
 		setMinimumSize(new Dimension(620, 600));
-		setLocationRelativeTo(null);
+		Theme.openCentered(this);
 		newQuestion();
 	}
 
@@ -220,20 +220,40 @@ public class QuizGUI extends JFrame implements ActionListener {
 		if (pauseTimer != null) {
 			pauseTimer.stop();
 		}
+		if (fadeTimer != null) {
+			fadeTimer.stop();
+		}
+		if (flashTimer != null) {
+			flashTimer.stop();
+		}
 		timerLabel.setForeground(Theme.HEADER_FG);
+		timerLabel.setText("--");
+		timeBar.setValue(TIME_MAX);
+		timeBar.setForeground(Theme.ACCENT);
 		digitsOff();
 		question.setText("loading...");
 		info.setText("fetching, wait...");
 		// fetch off the button thread so the window never freezes,
 		// done() runs back on the button thread to touch labels
-		new SwingWorker<Void, Void>() {
-			protected Void doInBackground() {
-				quiz.nextBanana();
-				return null;
+		new SwingWorker<BananaFetch.Question, Void>() {
+			protected BananaFetch.Question doInBackground() {
+				return quiz.fetchBanana();
 			}
 
 			protected void done() {
+				// window moved on while this fetch was in flight
 				if (myLoad != loadToken) {
+					return;
+				}
+				BananaFetch.Question q = null;
+				try {
+					q = get();
+				} catch (Exception e) {
+					System.out.println("fetch failed: " + e.getMessage());
+				}
+				if (!quiz.acceptBanana(q)) {
+					question.setText("no question loaded");
+					info.setText("could not load a banana puzzle, press skip to try again");
 					return;
 				}
 				showLoaded();
@@ -329,11 +349,12 @@ public class QuizGUI extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();
 		if (cmd.equals("logout")) {
+			loadToken++;
 			countTimer.stop();
 			stopPause();
 			new LoginData().clearSession();
-			QuizLoginGUI login = new QuizLoginGUI();
-			login.setVisible(true);
+			// login window shows itself now, no setVisible after this
+			new QuizLoginGUI();
 			dispose();
 			return;
 		}
@@ -342,6 +363,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 			return;
 		}
 		if (cmd.equals("menu")) {
+			loadToken++;
 			countTimer.stop();
 			stopPause();
 			MenuGUI m = new MenuGUI(quiz.getPlayer());

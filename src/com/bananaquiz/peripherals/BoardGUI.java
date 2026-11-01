@@ -28,6 +28,7 @@ public class BoardGUI extends JFrame {
 	public BoardGUI(String user) {
 		super("Leaderboard");
 		Theme.apply();
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.user = user;
 		this.admin = new LoginData().isAdmin(user);
 		if (!admin) {
@@ -50,12 +51,22 @@ public class BoardGUI extends JFrame {
 				load();
 			}
 		});
+		JButton back = new JButton("back");
+		Theme.button(back, Theme.SURFACE);
+		back.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				MenuGUI m = new MenuGUI(user);
+				m.setVisible(true);
+				dispose();
+			}
+		});
 		JPanel south = new JPanel();
 		south.add(refresh);
+		south.add(back);
 		add(south, BorderLayout.SOUTH);
 
-		pack();
-		setLocationRelativeTo(null);
+		setMinimumSize(new Dimension(480, 380));
+		Theme.openCentered(this);
 		setVisible(true);
 		load();
 	}
