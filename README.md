@@ -1,6 +1,6 @@
 # Banana Quiz - CIS046-3
 
-Java Swing quiz using the Banana API. Login first (default `Ada` / `hello23`, Ada is admin), then Play banana quiz or Leaderboard.
+Java Swing quiz using the Banana API. Login first (default `Ada` / `hello23`, Ada is admin), then Play banana quiz, Leaderboard or Settings.
 
 ## setup
 
@@ -26,6 +26,12 @@ java -cp bin com.bananaquiz.peripherals.QuizLoginGUI
 - session token in `~/.bananaquiz/session.cookie`, expires after 30 mins.
 - scores in `~/.bananaquiz/scores.txt`.
 - leaderboard: normal users see own scores, Ada (admin) sees all.
+- the quiz opens full screen with a live leaderboard down the right edge,
+  which polls `scores.txt` every 5s so a score saved elsewhere appears on
+  its own. turn it off in Settings.
+- settings are per user in `~/.bananaquiz/settings.txt`: seconds per question
+  (10-60), live leaderboard on/off, offline tag on/off. saved changes apply
+  from the next quiz.
 
 based on the TomatoFull example from the unit. see source comments for links used.
 

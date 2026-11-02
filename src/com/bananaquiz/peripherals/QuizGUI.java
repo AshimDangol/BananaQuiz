@@ -32,11 +32,13 @@ public class QuizGUI extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
 
 	QuizEngine quiz = null;
+	com.bananaquiz.engine.Settings prefs = null;
 	JLabel question = null;
 	JLabel scoreLabel = null;
 	JLabel timerLabel = null;
 	JTextArea info = null;
 	FadeImagePanel picLabel = null;
+	BoardPanel liveBoard = null;
 	JPanel status = null;
 	JProgressBar timeBar = null;
 	JButton[] numBtns = new JButton[10];
@@ -48,12 +50,16 @@ public class QuizGUI extends JFrame implements ActionListener {
 	boolean saved = false;
 	int left = 20;
 	int loadToken = 0;
-	static final int TIME_MAX = 20;
+	int timeMax = 20;
 
 	public QuizGUI(String player) {
 		super("Banana Quiz - " + player);
 		Theme.apply();
 		quiz = new QuizEngine(player);
+		prefs = new com.bananaquiz.engine.Settings(player);
+		// settings drive the countdown length, clamped in Settings.load()
+		timeMax = prefs.seconds;
+		left = timeMax;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		((JPanel) getContentPane()).setBorder(new javax.swing.border.EmptyBorder(8, 8, 8, 8));
 		setLayout(new BorderLayout(0, 8));
@@ -65,7 +71,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		status.setBorder(new javax.swing.border.EmptyBorder(6, 10, 6, 10));
 		scoreLabel = new JLabel("player: " + player + "  score: 0");
 		scoreLabel.setForeground(Theme.HEADER_FG);
-		timerLabel = new JLabel("20s", JLabel.RIGHT);
+		timerLabel = new JLabel(timeMax + "s", JLabel.RIGHT);
 		timerLabel.setForeground(Theme.HEADER_FG);
 		timerLabel.setFont(Theme.font(Font.BOLD, 18));
 		status.add(scoreLabel, BorderLayout.WEST);
@@ -73,8 +79,8 @@ public class QuizGUI extends JFrame implements ActionListener {
 		top.add(status, BorderLayout.NORTH);
 
 		// thin bar that drains with the timer, yellow when nearly out
-		timeBar = new JProgressBar(0, TIME_MAX);
-		timeBar.setValue(TIME_MAX);
+		timeBar = new JProgressBar(0, timeMax);
+		timeBar.setValue(timeMax);
 		timeBar.setForeground(Theme.ACCENT);
 		timeBar.setBackground(Theme.CARD_BORDER);
 		timeBar.setPreferredSize(new Dimension(0, 6));
@@ -142,6 +148,19 @@ public class QuizGUI extends JFrame implements ActionListener {
 		digitWrap.add(digits);
 		center.add(digitWrap, BorderLayout.SOUTH);
 		add(center, BorderLayout.CENTER);
+
+		// live leaderboard down the right edge, polled so a score saved in
+		// another window turns up without anyone pressing refresh
+		if (prefs.liveBoard) {
+			JPanel east = new JPanel(new BorderLayout(0, 6));
+			east.setBorder(new javax.swing.border.EmptyBorder(0, 4, 0, 0));
+			east.add(Theme.banner("Leaderboard", 15), BorderLayout.NORTH);
+			liveBoard = new BoardPanel(player, new LoginData().isAdmin(player));
+			liveBoard.startLive();
+			east.add(liveBoard, BorderLayout.CENTER);
+			east.setPreferredSize(new Dimension(330, 0));
+			add(east, BorderLayout.EAST);
+		}
 
 		info = new JTextArea(3, 40);
 		info.setEditable(false);
@@ -220,7 +239,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		picLabel.stopFade();
 		timerLabel.setForeground(Theme.HEADER_FG);
 		timerLabel.setText("--");
-		timeBar.setValue(TIME_MAX);
+		timeBar.setValue(timeMax);
 		timeBar.setForeground(Theme.ACCENT);
 		digitsOff();
 		question.setText("loading...");
@@ -254,15 +273,23 @@ public class QuizGUI extends JFrame implements ActionListener {
 	}
 
 	void showLoaded() {
-		left = TIME_MAX;
-		timerLabel.setText(TIME_MAX + "s");
+		left = timeMax;
+		timerLabel.setText(timeMax + "s");
 		stopLowFlash();
 		timerLabel.setForeground(Theme.HEADER_FG);
-		timeBar.setValue(TIME_MAX);
+		timeBar.setValue(timeMax);
 		timeBar.setForeground(Theme.ACCENT);
 		countTimer.restart();
-		question.setText("Banana puzzle: missing number?"
-				+ (quiz.bananaOffline ? " (offline)" : " (live)"));
+		// the offline tag is optional, some people find it noise
+		String tag = "";
+		if (prefs.showOffline && quiz.bananaOffline) {
+			tag = " (offline)";
+		}
+		question.setText("Banana puzzle: missing number?" + tag);
+		// a fresh score may have just landed, pick it up right away
+		if (liveBoard != null) {
+			liveBoard.load();
+		}
 		BufferedImage img = quiz.getBananaImage();
 		if (img != null) {
 			picLabel.setImage(img);
@@ -337,6 +364,9 @@ public class QuizGUI extends JFrame implements ActionListener {
 			countTimer.stop();
 			stopPause();
 			stopLowFlash();
+			if (liveBoard != null) {
+				liveBoard.stopLive();
+			}
 			new LoginData().clearSession();
 			// login window shows itself now, no setVisible after this
 			new QuizLoginGUI();
@@ -352,6 +382,9 @@ public class QuizGUI extends JFrame implements ActionListener {
 			countTimer.stop();
 			stopPause();
 			stopLowFlash();
+			if (liveBoard != null) {
+				liveBoard.stopLive();
+			}
 			MenuGUI m = new MenuGUI(quiz.getPlayer());
 			m.setVisible(true);
 			dispose();
@@ -365,6 +398,9 @@ public class QuizGUI extends JFrame implements ActionListener {
 			saved = true;
 			saveBtn.setEnabled(false);
 			Board.save(quiz.getPlayer(), quiz.getScore(), quiz.getTries(), "banana");
+			if (liveBoard != null) {
+				liveBoard.load();
+			}
 			info.setText("saved! answer was " + quiz.bananaSolution);
 			return;
 		}

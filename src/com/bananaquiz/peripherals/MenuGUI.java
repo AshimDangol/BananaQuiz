@@ -36,14 +36,17 @@ public class MenuGUI extends JFrame {
 
 		JButton play = new JButton("Play banana quiz");
 		JButton board = new JButton("Leaderboard");
+		JButton settings = new JButton("Settings");
 		JButton logout = new JButton("Logout");
 		play.setFont(play.getFont().deriveFont(15f));
 		Theme.button(play, Theme.ACCENT);
 		Theme.button(board, Theme.SURFACE);
+		Theme.button(settings, Theme.SURFACE);
 		Theme.button(logout, Theme.BAD);
 
 		panel.add(play);
 		panel.add(board);
+		panel.add(settings);
 		panel.add(logout);
 
 		play.addActionListener(new ActionListener() {
@@ -57,6 +60,12 @@ public class MenuGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				BoardGUI b = new BoardGUI(user);
 				b.setVisible(true);
+				dispose();
+			}
+		});
+		settings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new SettingsGUI(user);
 				dispose();
 			}
 		});
