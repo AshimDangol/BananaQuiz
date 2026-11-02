@@ -4,7 +4,7 @@ import java.awt.AlphaComposite;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
@@ -22,6 +22,8 @@ public class FadeImagePanel extends JPanel {
 	private static final int STEP_MS = 35;
 	private static final int MAX_W = 460;
 	private static final int MAX_H = 280;
+	// never blow the photo up past 1.5x its real size, past that it goes soft
+	private static final double ZOOM = 1.5;
 
 	private BufferedImage image = null;
 	private String placeholder = "";
@@ -32,10 +34,11 @@ public class FadeImagePanel extends JPanel {
 		setOpaque(true);
 	}
 
-	// scale to fit the picture area, then run the fade from blank
+	// keeps the full size picture and lets paintComponent scale it, so the
+	// photo stays sharp whatever the window ends up being
 	public void setImage(BufferedImage img) {
 		stopFade();
-		this.image = scaleTo(img);
+		this.image = img;
 		this.placeholder = "";
 		this.alpha = 0f;
 		revalidate();
@@ -94,9 +97,17 @@ public class FadeImagePanel extends JPanel {
 		try {
 			if (image != null) {
 				g2.setComposite(AlphaComposite.SrcOver.derive(alpha));
-				int x = (getWidth() - image.getWidth()) / 2;
-				int y = (getHeight() - image.getHeight()) / 2;
-				g2.drawImage(image, x, y, null);
+				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+						RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+				g2.setRenderingHint(RenderingHints.KEY_RENDERING,
+						RenderingHints.VALUE_RENDER_QUALITY);
+				double r = Math.min(
+						Math.min((double) getWidth() / image.getWidth(),
+								(double) getHeight() / image.getHeight()),
+						ZOOM);
+				int w = (int) (image.getWidth() * r);
+				int h = (int) (image.getHeight() * r);
+				g2.drawImage(image, (getWidth() - w) / 2, (getHeight() - h) / 2, w, h, null);
 			} else if (placeholder != null && !placeholder.isEmpty()) {
 				g2.setComposite(AlphaComposite.SrcOver.derive(1f));
 				g2.setColor(Theme.TEXT);
@@ -106,27 +117,5 @@ public class FadeImagePanel extends JPanel {
 		} finally {
 			g2.dispose();
 		}
-	}
-
-	private static BufferedImage scaleTo(BufferedImage src) {
-		if (src == null) {
-			return null;
-		}
-		int w = src.getWidth();
-		int h = src.getHeight();
-		double r = Math.min((double) MAX_W / w, (double) MAX_H / h);
-		if (r >= 1.0) {
-			return src;
-		}
-		int nw = (int) (w * r);
-		int nh = (int) (h * r);
-		BufferedImage out = new BufferedImage(nw, nh, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = out.createGraphics();
-		try {
-			g.drawImage(src.getScaledInstance(nw, nh, Image.SCALE_SMOOTH), 0, 0, null);
-		} finally {
-			g.dispose();
-		}
-		return out;
 	}
 }

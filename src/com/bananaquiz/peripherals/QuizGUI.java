@@ -121,7 +121,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		picLabel = new FadeImagePanel();
 		picLabel.setBackground(Theme.CARD_BG);
 		JScrollPane picScroll = new JScrollPane(picLabel);
-		picScroll.setPreferredSize(new Dimension(500, 300));
+		picScroll.setPreferredSize(new Dimension(1000, 560));
 		picScroll.setBorder(Theme.card());
 		picScroll.getViewport().setBackground(Theme.CARD_BG);
 		center.add(picScroll, BorderLayout.CENTER);
@@ -136,7 +136,11 @@ public class QuizGUI extends JFrame implements ActionListener {
 			Theme.button(numBtns[i], Theme.ACCENT);
 			digits.add(numBtns[i]);
 		}
-		center.add(digits, BorderLayout.SOUTH);
+		// flow layout keeps the digit buttons at their own size instead of
+		// letting the full screen width stretch each one to 300px
+		JPanel digitWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
+		digitWrap.add(digits);
+		center.add(digitWrap, BorderLayout.SOUTH);
 		add(center, BorderLayout.CENTER);
 
 		info = new JTextArea(3, 40);
@@ -181,7 +185,8 @@ public class QuizGUI extends JFrame implements ActionListener {
 		});
 
 		setMinimumSize(new Dimension(620, 600));
-		Theme.openCentered(this);
+		// quiz runs full screen, the other three windows stay openCentered
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		newQuestion();
 	}
 
