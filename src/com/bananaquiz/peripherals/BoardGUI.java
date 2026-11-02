@@ -22,14 +22,11 @@ public class BoardGUI extends JFrame {
 		Theme.apply();
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.user = user;
-		boolean admin = new LoginData().isAdmin(user);
-		if (!admin) {
-			setTitle("My scores - " + user);
-		} else {
-			setTitle("All scores (admin)");
-		}
 
-		panel = new BoardPanel(user, admin);
+		panel = new BoardPanel();
+		// polls like the quiz panel, so a score saved elsewhere turns up
+		// without pressing Refresh (timer stops itself when we dispose)
+		panel.startLive();
 		add(panel, BorderLayout.CENTER);
 
 		JButton refresh = new JButton("Refresh");

@@ -24,11 +24,14 @@ java -cp bin com.bananaquiz.peripherals.QuizLoginGUI
 - offline fallback uses `banana1.png` if the api is down, tagged (offline).
 - users stored hashed (SHA-256 + salt) in `~/.bananaquiz/users.txt`.
 - session token in `~/.bananaquiz/session.cookie`, expires after 30 mins.
-- scores in `~/.bananaquiz/scores.txt`.
-- leaderboard: normal users see own scores, Ada (admin) sees all.
-- the quiz opens full screen with a live leaderboard down the right edge,
-  which polls `scores.txt` every 5s so a score saved elsewhere appears on
-  its own. turn it off in Settings.
+- scores save themselves after every answer into `~/.bananaquiz/scores.txt`,
+  no save button.
+- leaderboard: everyone sees the full ranked list, one row per player
+  (best game), top score first. the leaderboard window and the quiz's side
+  panel both poll `scores.txt` every 5s, so a score saved elsewhere appears
+  on its own.
+- the quiz opens full screen with a live leaderboard down the right edge.
+  turn it off in Settings.
 - settings are per user in `~/.bananaquiz/settings.txt`: seconds per question
   (10-60), live leaderboard on/off, offline tag on/off. saved changes apply
   from the next quiz.

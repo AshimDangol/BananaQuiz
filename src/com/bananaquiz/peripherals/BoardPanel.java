@@ -1,7 +1,6 @@
 package com.bananaquiz.peripherals;
 
 import java.awt.BorderLayout;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -13,7 +12,7 @@ import javax.swing.table.DefaultTableModel;
 import com.bananaquiz.engine.Board;
 
 // scores table on its own so the leaderboard window and the live panel in
-// the quiz can share it. admin sees every row, a normal user only their own
+// the quiz can share it. everyone gets the same full ranked list
 public class BoardPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
@@ -21,15 +20,11 @@ public class BoardPanel extends JPanel {
 	static final String[] COLS = { "#", "name", "score", "tries", "mode" };
 	static final int REFRESH_MS = 5000;
 
-	String user;
-	boolean admin;
 	JTable table = new JTable();
 	Timer live = null;
 
-	public BoardPanel(String user, boolean admin) {
+	public BoardPanel() {
 		super(new BorderLayout());
-		this.user = user;
-		this.admin = admin;
 		table.setRowHeight(24);
 		table.setFillsViewportHeight(true);
 		table.setDefaultEditor(Object.class, null);
@@ -40,19 +35,18 @@ public class BoardPanel extends JPanel {
 	// re-read scores.txt and repaint the rows
 	public void load() {
 		List<Board.Row> rows = Board.top(50);
-		ArrayList<String[]> list = new ArrayList<String[]>();
-		int i = 1;
-		for (Board.Row r : rows) {
-			if (admin || r.name.equals(user)) {
-				list.add(new String[] { String.valueOf(i++), r.name,
-						String.valueOf(r.score), String.valueOf(r.tries), r.mode });
-			}
-		}
 		String[][] out;
-		if (list.isEmpty()) {
+		if (rows.isEmpty()) {
 			out = new String[][] { { "", "no scores yet, play first", "", "", "" } };
 		} else {
-			out = list.toArray(new String[0][]);
+			out = new String[rows.size()][COLS.length];
+			for (int i = 0; i < rows.size(); i++) {
+				Board.Row r = rows.get(i);
+				// rank is the position in the full list, so # means the
+				// same thing for every player
+				out[i] = new String[] { String.valueOf(i + 1), r.name,
+						String.valueOf(r.score), String.valueOf(r.tries), r.mode };
+			}
 		}
 		table.setModel(new DefaultTableModel(out, COLS) {
 			private static final long serialVersionUID = 1L;

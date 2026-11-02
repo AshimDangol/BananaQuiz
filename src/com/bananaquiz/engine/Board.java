@@ -71,6 +71,16 @@ public class Board {
 				return a.tries - b.tries;
 			}
 		});
+		// one entry per player: the sort already puts each player's best
+		// game first, so keep the first row seen for a name and drop the
+		// rest. the file still keeps every game played
+		java.util.LinkedHashMap<String, Row> best = new java.util.LinkedHashMap<String, Row>();
+		for (Row r : rows) {
+			if (!best.containsKey(r.name)) {
+				best.put(r.name, r);
+			}
+		}
+		rows = new ArrayList<Row>(best.values());
 		if (rows.size() > n) {
 			return rows.subList(0, n);
 		}

@@ -42,12 +42,10 @@ public class QuizGUI extends JFrame implements ActionListener {
 	JPanel status = null;
 	JProgressBar timeBar = null;
 	JButton[] numBtns = new JButton[10];
-	JButton saveBtn = null;
 	Timer countTimer = null;
 	Timer pauseTimer = null;
 	Timer flashTimer = null;
 	Timer lowFlash = null;
-	boolean saved = false;
 	int left = 20;
 	int loadToken = 0;
 	int timeMax = 20;
@@ -99,19 +97,12 @@ public class QuizGUI extends JFrame implements ActionListener {
 		skip.addActionListener(this);
 		Theme.button(skip, Theme.SURFACE);
 
-		JButton save = new JButton("save score");
-		save.setActionCommand("save");
-		save.addActionListener(this);
-		Theme.button(save, Theme.ACCENT);
-		saveBtn = save;
-
 		JButton menu = new JButton("menu");
 		menu.setActionCommand("menu");
 		menu.addActionListener(this);
 		Theme.button(menu, Theme.SURFACE);
 
 		controls.add(skip);
-		controls.add(save);
 		controls.add(menu);
 		controls.add(logout);
 		top.add(controls, BorderLayout.SOUTH);
@@ -155,7 +146,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 			JPanel east = new JPanel(new BorderLayout(0, 6));
 			east.setBorder(new javax.swing.border.EmptyBorder(0, 4, 0, 0));
 			east.add(Theme.banner("Leaderboard", 15), BorderLayout.NORTH);
-			liveBoard = new BoardPanel(player, new LoginData().isAdmin(player));
+			liveBoard = new BoardPanel();
 			liveBoard.startLive();
 			east.add(liveBoard, BorderLayout.CENTER);
 			east.setPreferredSize(new Dimension(330, 0));
@@ -197,6 +188,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 					info.setText("time up! answer was " + quiz.bananaSolution);
 					quiz.miss();
 					updateScore();
+					autoSave();
 					flash(Theme.WARN);
 					newQuestionDelayed();
 				}
@@ -212,6 +204,15 @@ public class QuizGUI extends JFrame implements ActionListener {
 	void updateScore() {
 		scoreLabel.setText("player: " + quiz.getPlayer()
 				+ "  score: " + quiz.getScore() + " tries: " + quiz.getTries());
+	}
+
+	// every answer writes itself out, no save button to press. the live
+	// panel gets reloaded too so the row changes straight away
+	void autoSave() {
+		Board.save(quiz.getPlayer(), quiz.getScore(), quiz.getTries(), "banana");
+		if (liveBoard != null) {
+			liveBoard.load();
+		}
 	}
 
 	void digitsOff() {
@@ -390,20 +391,6 @@ public class QuizGUI extends JFrame implements ActionListener {
 			dispose();
 			return;
 		}
-		if (cmd.equals("save")) {
-			if (saved) {
-				info.setText("already saved this game");
-				return;
-			}
-			saved = true;
-			saveBtn.setEnabled(false);
-			Board.save(quiz.getPlayer(), quiz.getScore(), quiz.getTries(), "banana");
-			if (liveBoard != null) {
-				liveBoard.load();
-			}
-			info.setText("saved! answer was " + quiz.bananaSolution);
-			return;
-		}
 		if (cmd.startsWith("num")) {
 			int guess = Integer.parseInt(cmd.substring(3));
 			boolean ok = quiz.checkBanana(guess);
@@ -415,6 +402,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 				flash(Theme.BAD);
 			}
 			updateScore();
+			autoSave();
 			newQuestionDelayed();
 		}
 	}
