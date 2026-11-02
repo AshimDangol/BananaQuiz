@@ -5,14 +5,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -39,15 +36,15 @@ public class QuizGUI extends JFrame implements ActionListener {
 	JLabel scoreLabel = null;
 	JLabel timerLabel = null;
 	JTextArea info = null;
-	JLabel picLabel = null;
+	FadeImagePanel picLabel = null;
 	JPanel status = null;
 	JProgressBar timeBar = null;
 	JButton[] numBtns = new JButton[10];
 	JButton saveBtn = null;
 	Timer countTimer = null;
 	Timer pauseTimer = null;
-	Timer fadeTimer = null;
 	Timer flashTimer = null;
+	Timer lowFlash = null;
 	boolean saved = false;
 	int left = 20;
 	int loadToken = 0;
@@ -121,8 +118,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 		question.setBorder(new javax.swing.border.EmptyBorder(6, 4, 6, 4));
 		center.add(question, BorderLayout.NORTH);
 
-		picLabel = new JLabel("", JLabel.CENTER);
-		picLabel.setOpaque(true);
+		picLabel = new FadeImagePanel();
 		picLabel.setBackground(Theme.CARD_BG);
 		JScrollPane picScroll = new JScrollPane(picLabel);
 		picScroll.setPreferredSize(new Dimension(500, 300));
@@ -160,10 +156,21 @@ public class QuizGUI extends JFrame implements ActionListener {
 				left--;
 				timerLabel.setText(left + "s");
 				boolean warn = left <= 5;
-				timerLabel.setForeground(warn ? Theme.WARN : Theme.HEADER_FG);
+				if (warn) {
+					// last 5s pulse the label instead of just recolouring it
+					if (lowFlash == null || !lowFlash.isRunning()) {
+						startLowFlash();
+					}
+				} else {
+					stopLowFlash();
+					timerLabel.setForeground(Theme.HEADER_FG);
+				}
 				timeBar.setValue(Math.max(left, 0));
 				timeBar.setForeground(warn ? Theme.WARN : Theme.ACCENT);
 				if (left <= 0) {
+					stopLowFlash();
+					timerLabel.setForeground(Theme.WARN);
+					digitsOff();
 					info.setText("time up! answer was " + quiz.bananaSolution);
 					quiz.miss();
 					updateScore();
@@ -176,25 +183,6 @@ public class QuizGUI extends JFrame implements ActionListener {
 		setMinimumSize(new Dimension(620, 600));
 		Theme.openCentered(this);
 		newQuestion();
-	}
-
-	// scales down to fit the picture area, unchanged if already small enough
-	BufferedImage fitImage(BufferedImage img) {
-		int maxW = 460;
-		int maxH = 280;
-		int w = img.getWidth();
-		int h = img.getHeight();
-		double r = Math.min((double) maxW / w, (double) maxH / h);
-		if (r >= 1.0) {
-			return img;
-		}
-		int nw = (int) (w * r);
-		int nh = (int) (h * r);
-		BufferedImage out = new BufferedImage(nw, nh, BufferedImage.TYPE_INT_ARGB);
-		java.awt.Graphics2D g = out.createGraphics();
-		g.drawImage(img.getScaledInstance(nw, nh, Image.SCALE_SMOOTH), 0, 0, null);
-		g.dispose();
-		return out;
 	}
 
 	void updateScore() {
@@ -220,12 +208,11 @@ public class QuizGUI extends JFrame implements ActionListener {
 		if (pauseTimer != null) {
 			pauseTimer.stop();
 		}
-		if (fadeTimer != null) {
-			fadeTimer.stop();
-		}
 		if (flashTimer != null) {
 			flashTimer.stop();
 		}
+		stopLowFlash();
+		picLabel.stopFade();
 		timerLabel.setForeground(Theme.HEADER_FG);
 		timerLabel.setText("--");
 		timeBar.setValue(TIME_MAX);
@@ -264,6 +251,8 @@ public class QuizGUI extends JFrame implements ActionListener {
 	void showLoaded() {
 		left = TIME_MAX;
 		timerLabel.setText(TIME_MAX + "s");
+		stopLowFlash();
+		timerLabel.setForeground(Theme.HEADER_FG);
 		timeBar.setValue(TIME_MAX);
 		timeBar.setForeground(Theme.ACCENT);
 		countTimer.restart();
@@ -271,11 +260,9 @@ public class QuizGUI extends JFrame implements ActionListener {
 				+ (quiz.bananaOffline ? " (offline)" : " (live)"));
 		BufferedImage img = quiz.getBananaImage();
 		if (img != null) {
-			picLabel.setText("");
-			fadeIn(fitImage(img));
+			picLabel.setImage(img);
 		} else {
-			picLabel.setIcon(null);
-			picLabel.setText("no image, check net");
+			picLabel.setPlaceholder("no image, check net");
 		}
 		digitsOn();
 		info.setText("pick 0-9...");
@@ -297,31 +284,23 @@ public class QuizGUI extends JFrame implements ActionListener {
 		flashTimer.start();
 	}
 
-	// picture appears by opacity ramping up over ~0.3s
-	void fadeIn(final BufferedImage img) {
-		if (fadeTimer != null) {
-			fadeTimer.stop();
-		}
-		final float[] step = { 0.2f };
-		fadeTimer = new Timer(35, new ActionListener() {
+	// last 5 seconds: flip the timer text between warn and bad so the
+	// countdown feels urgent instead of just sitting one static colour
+	void startLowFlash() {
+		stopLowFlash();
+		lowFlash = new Timer(150, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				BufferedImage frame = new BufferedImage(
-						img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
-				java.awt.Graphics2D g = frame.createGraphics();
-				g.setComposite(java.awt.AlphaComposite.getInstance(
-						java.awt.AlphaComposite.SRC_OVER, step[0]));
-				g.drawImage(img, 0, 0, null);
-				g.dispose();
-				picLabel.setIcon(new ImageIcon(frame));
-				step[0] += 0.15f;
-				if (step[0] >= 1.0f) {
-					picLabel.setIcon(new ImageIcon(img));
-					((Timer) e.getSource()).stop();
-				}
+				timerLabel.setForeground(
+						timerLabel.getForeground().equals(Theme.WARN) ? Theme.BAD : Theme.WARN);
 			}
 		});
-		fadeTimer.setRepeats(true);
-		fadeTimer.start();
+		lowFlash.start();
+	}
+
+	void stopLowFlash() {
+		if (lowFlash != null && lowFlash.isRunning()) {
+			lowFlash.stop();
+		}
 	}
 
 	// short pause so you can read the result before next loads
@@ -352,6 +331,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 			loadToken++;
 			countTimer.stop();
 			stopPause();
+			stopLowFlash();
 			new LoginData().clearSession();
 			// login window shows itself now, no setVisible after this
 			new QuizLoginGUI();
@@ -366,6 +346,7 @@ public class QuizGUI extends JFrame implements ActionListener {
 			loadToken++;
 			countTimer.stop();
 			stopPause();
+			stopLowFlash();
 			MenuGUI m = new MenuGUI(quiz.getPlayer());
 			m.setVisible(true);
 			dispose();
