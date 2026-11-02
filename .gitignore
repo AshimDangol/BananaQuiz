@@ -7,3 +7,7 @@ session.cookie
 settings_*.txt
 Tomato*.zip
 *.docx
+
+# course material + unit example code, kept local only
+/course/
+/examples/
