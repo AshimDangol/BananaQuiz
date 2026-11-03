@@ -11,3 +11,7 @@ Tomato*.zip
 # course material + unit example code, kept local only
 /course/
 /examples/
+
+# docs and form scripts, kept local only
+/docs/
+/tools/
